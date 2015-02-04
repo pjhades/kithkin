@@ -47,3 +47,7 @@ newline:
 
 str_run_bootloader:
 .ascii "Run bootloader ..."
+str_failed:
+.ascii "failed"
+str_done:
+.ascii "done"
