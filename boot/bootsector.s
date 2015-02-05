@@ -25,9 +25,9 @@ _start:
 
     /* load bootloader on C:H:S=0:0:2 */
     movw $0x5, %si /* try 5 times */
-int0x13_retry:
+.int0x13_retry:
     test %si, %si
-    jz int0x13_failed
+    jz .int0x13_failed
 
     decw %si
 
@@ -44,10 +44,10 @@ int0x13_retry:
     movw $bootloader, %bx /* buffer */
     int $0x13
 
-    jnc int0x13_done
-    jmp int0x13_retry
+    jnc .int0x13_done
+    jmp .int0x13_retry
 
-int0x13_failed:
+.int0x13_failed:
     pushw $6
     pushw $str_failed
     call print_string
@@ -55,7 +55,7 @@ int0x13_failed:
     popw %ax
     jmp .
 
-int0x13_done:
+.int0x13_done:
     pushw $4
     pushw $str_done
     call print_string
@@ -106,11 +106,11 @@ newline:
 
 
 str_loading_bootloader:
-.ascii "Loading bootloader ..."
+    .ascii "Loading bootloader ..."
 str_failed:
-.ascii "failed"
+    .ascii "failed"
 str_done:
-.ascii "done"
+    .ascii "done"
 
 .org _start + 510
 .word 0xaa55
