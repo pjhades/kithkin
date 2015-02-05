@@ -9,7 +9,7 @@ _start:
     popw %ax
     popw %ax
 
-    /* open A20 */
+    /* open A20, see http://wiki.osdev.org/A20 */
     call enable_a20
     call check_a20
     testb %al, %al
