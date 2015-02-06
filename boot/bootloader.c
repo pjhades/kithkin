@@ -5,38 +5,16 @@ asm (".code16gcc\n");
 
 void print_string(char *s, int len);
 
-int check_a20(void)
+static int check_a20(void)
 {
-    int ret;
-    asm volatile (
-            "pushl %%ds\n\t"
-            "pushl %%es\n\t"
-            "pushl %%edi\n\t"
-            "pushl %%esi\n\t"
-            "xorw %%ax, %%ax\n\t"
-            "movw %%ax, %%es\n\t" /* base 0x0000*/
-            "notw %%ax\n\t"
-            "movw %%ax, %%ds\n\t" /* base 0xffff */
-            "movw $0x7dfe, %%di\n\t" /* bootsector magic */
-            "movw $0x7e0e, %%si\n\t" /* 1M higher */
-            "movw $0xdead, %%es:(%%di)\n\t" /* write to 0000:7dfe */
-            "movw $0xbeef, %%ds:(%%si)\n\t" /* write to ffff:7e0e */
-            "cmpw $0xbeef, %%es:(%%di)\n\t" /* test if overwritten */
-            "movb $0x0, %%al\n\t"
-            "jz .check_a20_done\n\t"
-            "movb $0x01, %%al\n\t"
-        ".check_a20_done:\n\t"
-            "popl %%esi\n\t"
-            "popl %%edi\n\t"
-            "popl %%es\n\t"
-            "popl %%ds\n\t"
-            :"=a"(ret)
-            ::
-            );
-    return ret;
+    *((uint16_t *)0x07dfe) = 0xdead; /* write to 0000:7dfe */
+    *((uint16_t *)((0x0ffff << 4) + 0x07e0e)) = 0xbeef; /* write to ffff:7e0e */
+    if (*((uint16_t *)0x07dfe) == 0xbeef) /* check if overwritten */
+        return 0;
+    return 1;
 }
 
-void wait_read_8042(void)
+static void wait_read_8042(void)
 {
     uint8_t value;
 
@@ -47,7 +25,7 @@ void wait_read_8042(void)
     }
 }
 
-void wait_write_8042(void)
+static void wait_write_8042(void)
 {
     uint8_t value;
     
@@ -58,7 +36,7 @@ void wait_write_8042(void)
     }
 }
 
-int enable_a20(void)
+static int enable_a20(void)
 {
     uint8_t value;
 
