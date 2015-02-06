@@ -36,7 +36,7 @@ _start:
     int $0x13
 
     movb $0x02, %ah
-    movb $0x01, %al /* number of sectors to read */
+    movb $0x3, %al /* number of sectors to read */
     xorb %ch, %ch /* track low 8 bits */
     movb $0x02, %cl /* sector, track high 2 bits */
     xorb %dh, %dh /* head */
