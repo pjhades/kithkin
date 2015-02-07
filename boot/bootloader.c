@@ -5,7 +5,7 @@ asm (".code16gcc\n");
 
 void print_string(char *s, int len);
 
-static int check_a20(void)
+inline static int check_a20(void)
 {
     *((uint16_t *)0x07dfe) = 0xdead; /* write to 0000:7dfe */
     *((uint16_t *)((0x0ffff << 4) + 0x07e0e)) = 0xbeef; /* write to ffff:7e0e */
@@ -79,13 +79,74 @@ static int enable_a20(void)
     return 0;
 }
 
-void main(void)
+inline static void print_status(int status)
 {
-    print_string("Enabling A20 line ...", 21);
-
-    if (enable_a20())
+    if (status == 1)
         print_string("done\r\n", 6);
     else
         print_string("failed\r\n", 8);
+}
+
+struct mem_e820_entry {
+    uint64_t base; 
+    uint64_t len;
+    uint32_t type;
+    uint32_t attr;
+};
+
+struct mem_e820 {
+    uint32_t n_regions;
+    struct mem_e820_entry regions[MEM_E820_MAX];
+} e820_map;
+
+static int detect_memory(void)
+{
+    int size = sizeof(struct mem_e820_entry), ret;
+
+    asm volatile (
+            "xorl %%esi, %%esi\n\t"
+            "xorl %%ebx, %%ebx\n\t"
+        ".e820_next:\n\t"
+            "movl $0x534d4150, %%edx\n\t"
+            "movl $0x0000e820, %%eax\n\t"
+            "movl $24, %%ecx\n\t"
+            "int $0x15\n\t"
+            "jc .e820_error\n\t"
+            "incl %%esi\n\t"
+            "testl %%ebx, %%ebx\n\t"
+            "jz .e820_last\n\t"
+            "addw %4, %%di\n\t"
+            "movl $0x0000e820, %%eax\n\t"
+            "movl $24, %%ecx\n\t"
+            "jmp .e820_next\n\t"
+        ".e820_error:\n\t"
+            "xorl %%eax, %%eax\n\t"
+            "jmp .e820_done\n\t"
+        ".e820_last:\n\t"
+            "movl $0x1, %%eax\n\t"
+        ".e820_done:\n\t"
+            :"=S"(e820_map.n_regions), "=a"(ret)
+            :"S"(e820_map.n_regions), "D"(e820_map.regions), "m"(size)
+            :
+            );
+    return ret;
+}
+
+#define PRINT_STATUS(function_call)        \
+    do {                                   \
+        if (function_call)                 \
+            print_string("done\r\n", 6);   \
+        else                               \
+            print_string("failed\r\n", 8); \
+    } while (0)
+
+void main(void)
+{
+    print_string("Enabling A20 line ...", 21);
+    PRINT_STATUS(enable_a20());
+
+    print_string("Detecting memory map ...", 24);
+    PRINT_STATUS(detect_memory());
+
     while (1);
 }

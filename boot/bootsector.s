@@ -70,7 +70,6 @@ _start:
 .equ stack, 0x7c00
 .equ bootloader, 0x500
 
-/* print_string(string, length) */
 print_string:
     pushw %cx
     pushw %bp 
@@ -92,7 +91,6 @@ print_string:
     popw %cx
     ret
 
-/* newline() */
 newline:
     movb $0x03, %ah /* get cursor position */
     xorb %bh, %bh /* page */
