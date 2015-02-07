@@ -23,7 +23,7 @@ bootldr: $(boot_dir)/$(bootldr_name).s $(boot_dir)/$(bootldr_name).c
 	gcc -I. -nostdinc -m32 -c $(boot_dir)/$(bootldr_name).c -o $(boot_dir)/ldr_c.o
 	gcc -I. -nostdinc -m32 -c $(arch_dir)/x86.c -o $(arch_dir)/x86.o
 	ld -Ttext 0x0500 -m elf_i386 $(boot_dir)/ldr_asm.o $(boot_dir)/ldr_c.o $(arch_dir)/x86.o -o $(boot_dir)/ldr.elf
-	objcopy -j .text -j .rodata -O binary $(boot_dir)/ldr.elf $(boot_dir)/ldr.bin
+	objcopy -j .text -j .rodata -j .bss -O binary $(boot_dir)/ldr.elf $(boot_dir)/ldr.bin
 
 .PHONY: clean
 clean:
