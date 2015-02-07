@@ -1,5 +1,5 @@
-#ifndef __X86_H__
-#define __X86_H__
+#ifndef __ASM_H__
+#define __ASM_H__
 
 #include <include/common.h>
 
