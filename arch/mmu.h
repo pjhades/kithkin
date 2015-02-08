@@ -9,4 +9,7 @@
      ((((uint64_t)base )&0x00ffffff)<<16) |     \
       (((uint64_t)limit)&0x0000ffff))
 
+#define BOOT_GDT_CODE 1
+#define BOOT_GDT_DATA 2
+
 #endif

@@ -1,3 +1,5 @@
+#include <arch/mmu.h>
+
 .globl _start
 
 .text
@@ -31,7 +33,7 @@ print_string:
 
 .globl jump_to_protected_mode
 jump_to_protected_mode:
-    ljmp    $0x8, $protected_mode_entry
+    ljmp    $BOOT_GDT_CODE<<3, $protected_mode_entry
 
 /* leave this here for debugging */
 /*
@@ -48,7 +50,7 @@ gdtdesc:
 
 .code32
 protected_mode_entry:
-    movw $0x10, %ax
+    movw $BOOT_GDT_DATA<<3, %ax
     movw %ax, %ds
     movw %ax, %es
     movw %ax, %fs
