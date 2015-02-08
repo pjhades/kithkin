@@ -1,4 +1,4 @@
-asm (".code16gcc\n");
+//asm (".code16gcc\n");
 
 #include <arch/x86.h>
 
