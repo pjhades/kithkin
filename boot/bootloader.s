@@ -1,7 +1,7 @@
-.code16
 .globl _start
 
 .text
+.code16
 _start:
     jmp main
 
@@ -28,3 +28,36 @@ print_string:
     popl %ecx
     ret
 
+
+.globl jump_to_protected_mode
+jump_to_protected_mode:
+    ljmp    $0x8, $protected_mode_entry
+
+/* leave this here for debugging */
+/*
+gdt:
+  .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  .byte 0xff, 0xff, 0x00, 0x00, 0x00, 0x9a, 0xcf, 0x00 
+  .byte 0xff, 0xff, 0x00, 0x00, 0x00, 0x92, 0xcf, 0x00 
+
+gdtdesc:
+  .word   0x17
+  .long   gdt
+*/
+    
+
+.code32
+protected_mode_entry:
+    movw $0x10, %ax
+    movw %ax, %ds
+    movw %ax, %es
+    movw %ax, %fs
+    movw %ax, %gs
+    movw %ax, %ss
+
+    movb $0x30, %al
+    movb %al, %ds:(0x0b8000)
+    movb $0x0e, %al
+    movb %al, %ds:(0x0b8001)
+
+    jmp .

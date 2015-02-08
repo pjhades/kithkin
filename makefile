@@ -16,8 +16,8 @@ bootsec: boot/bootsector.s
 bootldr: boot/bootloader.s boot/bootloader.c arch/x86.o
 	as --32 boot/bootloader.s -o boot/ldr_asm.o
 	gcc $(INC) -nostdinc -m32 -c boot/bootloader.c -o boot/ldr_c.o
-	ld -Ttext 0x0500 -m elf_i386 boot/ldr_asm.o boot/ldr_c.o arch/x86.o -o boot/ldr.elf
-	objcopy -j .text -j .rodata -j .bss -O binary boot/ldr.elf boot/ldr.bin
+	ld -T boot/linker.ld -m elf_i386 boot/ldr_asm.o boot/ldr_c.o arch/x86.o -o boot/ldr.elf
+	objcopy -j .text -j .rodata -j .bss -j .data -O binary boot/ldr.elf boot/ldr.bin
 
 arch/x86.o: arch/x86.c
 	gcc $(INC) -nostdinc -m32 -c $< -o $@

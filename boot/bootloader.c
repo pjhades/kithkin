@@ -1,6 +1,7 @@
 asm (".code16gcc\n");
 
 #include <arch/x86.h>
+#include <arch/mmu.h>
 #include <include/common.h>
 
 void print_string(char *s, int len);
@@ -10,8 +11,8 @@ inline static int check_a20(void)
     *((uint16_t *)0x07dfe) = 0xdead; /* write to 0000:7dfe */
     *((uint16_t *)((0x0ffff << 4) + 0x07e0e)) = 0xbeef; /* write to ffff:7e0e */
     if (*((uint16_t *)0x07dfe) == 0xbeef) /* check if overwritten */
-        return 0;
-    return 1;
+        return -1;
+    return 0;
 }
 
 static void wait_read_8042(void)
@@ -40,8 +41,8 @@ static int enable_a20(void)
 {
     uint8_t value;
 
-    if (check_a20())
-        return 1;
+    if (!check_a20())
+        return 0;
 
     /* try BIOS service */
     asm volatile (
@@ -49,8 +50,8 @@ static int enable_a20(void)
             "int $0x15\n\t"
             );
 
-    if (check_a20())
-        return 1;
+    if (!check_a20())
+        return 0;
 
     /* try 8042 keyboard controller */
     wait_write_8042();
@@ -67,24 +68,22 @@ static int enable_a20(void)
     outb(0x64, 0xae); /* enable keyboard */
     wait_write_8042();
 
-    if (check_a20())
-        return 1;
+    if (!check_a20())
+        return 0;
 
     /* try fast A20 gate */
     value = inb(0x92);
     outb(0x92, value | 0x02);
             
-    if (check_a20())
-        return 1;
-    return 0;
+    if (!check_a20())
+        return 0;
+    return -1;
 }
 
-inline static void print_status(int status)
+inline static void die(void)
 {
-    if (status == 1)
-        print_string("done\r\n", 6);
-    else
-        print_string("failed\r\n", 8);
+    print_string("Error occurred during boot\r\n", 28);
+    while (1);
 }
 
 struct mem_e820_entry {
@@ -101,7 +100,7 @@ struct mem_e820 {
 
 static int detect_memory(void)
 {
-    int size = sizeof(struct mem_e820_entry), ret;
+    int size = sizeof(struct mem_e820_entry), error;
 
     asm volatile (
             "xorl %%esi, %%esi\n\t"
@@ -120,33 +119,58 @@ static int detect_memory(void)
             "movl $24, %%ecx\n\t"
             "jmp .e820_next\n\t"
         ".e820_error:\n\t"
-            "xorl %%eax, %%eax\n\t"
+            "movl $0x1, %%eax\n\t"
             "jmp .e820_done\n\t"
         ".e820_last:\n\t"
-            "movl $0x1, %%eax\n\t"
+            "xorl %%eax, %%eax\n\t"
         ".e820_done:\n\t"
-            :"=S"(e820_map.n_regions), "=a"(ret)
+            :"=S"(e820_map.n_regions), "=a"(error)
             :"S"(e820_map.n_regions), "D"(e820_map.regions), "m"(size)
             :
             );
-    return ret;
+    return error ? -1 : 0;
 }
 
-#define PRINT_STATUS(function_call)        \
-    do {                                   \
-        if (function_call)                 \
-            print_string("done\r\n", 6);   \
-        else                               \
-            print_string("failed\r\n", 8); \
-    } while (0)
+uint64_t boot_gdt[] = {
+    /* 0: null descriptor */
+    SEG_DESC(0x0, 0x0, 0x0),
+    /* 1: 32-bit read/executable code segment, 4k granularity, DPL 0 */
+    SEG_DESC(0x0, 0xfffff, 0xc09a),
+    /* 2: 32-bit read/write data segment, 4k granularity, DPL 0*/
+    SEG_DESC(0x0, 0xfffff, 0xc092),
+};
+
+struct gdt_ptr {
+    uint16_t len;
+    uint32_t ptr;
+} __attribute__((packed));
+
+struct gdt_ptr gdt;
+
+static void enter_protected_mode(void)
+{
+    gdt.len = sizeof(boot_gdt) - 1;
+    gdt.ptr = (uint32_t)&boot_gdt;
+    asm volatile (
+            "lgdt %0\n\t"
+            "movl %%cr0, %%eax\n\t"
+            "orl $0x1, %%eax\n\t"
+            "movl %%eax, %%cr0\n\t"
+            : :"m"(gdt) :
+            );
+    jump_to_protected_mode();
+}
 
 void main(void)
 {
-    print_string("Enabling A20 line ...", 21);
-    PRINT_STATUS(enable_a20());
+    print_string("Enabling A20 line ...\r\n", 23);
+    if (enable_a20())
+        die();
 
-    print_string("Detecting memory map ...", 24);
-    PRINT_STATUS(detect_memory());
+    print_string("Detecting memory map ...\r\n", 26);
+    if (detect_memory())
+        die();
 
-    while (1);
+    print_string("Switching to protected mode ...\r\n", 33);
+    enter_protected_mode();
 }
