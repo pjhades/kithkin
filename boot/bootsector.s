@@ -17,7 +17,7 @@ _start:
     int $0x10
 
     /* print status */
-    pushw $22
+    pushw $24
     pushw $str_loading_bootloader
     call print_string
     popw %ax
@@ -48,22 +48,14 @@ _start:
     jmp .int0x13_retry
 
 .int0x13_failed:
-    pushw $6
-    pushw $str_failed
+    pushw $28
+    pushw $str_error
     call print_string
     popw %ax
     popw %ax
     jmp .
 
 .int0x13_done:
-    pushw $4
-    pushw $str_done
-    call print_string
-    popw %ax
-    popw %ax
-
-    call newline
-
     movw $bootloader, %bx
     jmp *%bx
 
@@ -91,24 +83,11 @@ print_string:
     popw %cx
     ret
 
-newline:
-    movb $0x03, %ah /* get cursor position */
-    xorb %bh, %bh /* page */
-    int $0x10
-    addb $0x01, %dh /* move to next line first column */
-    xorb %dl, %dl
-    movb $0x02, %ah /* set new cursor position*/
-    xorb %bh, %bh
-    int $0x10
-    ret
-
 
 str_loading_bootloader:
-    .ascii "Loading bootloader ..."
-str_failed:
-    .ascii "failed"
-str_done:
-    .ascii "done"
+    .ascii "Loading bootloader ...\r\n"
+str_error:
+    .ascii "Error occurred during boot\r\n"
 
 .org _start + 510
 .word 0xaa55
