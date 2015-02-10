@@ -4,6 +4,8 @@ asm (".code16gcc\n");
 #include <arch/mmu.h>
 #include <common.h>
 
+uint8_t cursor_row, cursor_col;
+
 void print_string(char *s, int len);
 
 inline static int check_a20(void)
@@ -161,6 +163,17 @@ static void enter_protected_mode(void)
     jump_to_protected_mode();
 }
 
+static void save_cursor_position(void)
+{
+    asm volatile(
+            "movb $0x03, %%ah\n\t"
+            "xorb %%bh, %%bh\n\t"
+            "int $0x10\n\t"
+            "movb %%dh, %%al\n\t"
+            :"=a"(cursor_row), "=d"(cursor_col)
+            );
+}
+
 void main(void)
 {
     print_string("Enabling A20 line ...\r\n", 23);
@@ -172,15 +185,56 @@ void main(void)
         die();
 
     print_string("Switching to protected mode ...\r\n", 33);
+    save_cursor_position(); /* to continue printing */
     enter_protected_mode();
 }
 
 /* run in protected mode */
 asm (".code32\n");
 
+/* debug only */
+static void print_byte(char ch)
+{
+    *((uint8_t *)0x0b8000 + ((cursor_row * 80 + cursor_col) << 1)) = ch;
+    *((uint8_t *)0x0b8001 + ((cursor_row * 80 + cursor_col) << 1)) = 0x0e;
+    if (++cursor_col == 80) {
+        cursor_col = 0;
+        ++cursor_row;
+    }
+}
+
+/* debug only */
+static void print_s(char *s)
+{
+    for (; *s; s++)
+        print_byte(*s);
+}
+
 void pm_main()
 {
-    *((uint8_t *)0x0b8000) = '!';
-    *((uint8_t *)0x0b8001) = 0x0e;
+    uint8_t *addr, id1, id2;
+    uint32_t lba;
+
+    addr = (uint8_t *)0x7dbe; /* 0x7c00 + 446 */
+    /* bootsector guarantees there must be a valid linux partition */
+    while (*addr != 0x80 || *(addr + 4) != 0x83)
+        addr += 0x10;
+    lba = *(addr + 8); /* LBA of first sector in partition */
+
+    /*
+    outb(0x3f6, 0x04);
+    outb(0x3f6, 0x0);
+    id1 = inb(0x1f4);
+    id2 = inb(0x1f5);
+    if (id1 == 0x0 && id2 == 0x0)
+        print_s("pata");
+    if (id1 == 0x14 && id2 == 0xeb)
+        print_s("patapi");
+    if (id1 == 0x3c && id2 == 0xc3)
+        print_s("sata");
+    if (id1 == 0x69 && id2 == 0x96)
+        print_s("satapi");
+    */
+
     while (1);
 }
