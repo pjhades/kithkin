@@ -31,7 +31,10 @@ _start:
     jz .check_partition_failed
     decb %cl
     cmpb $0x80, (%eax)
+    jne .check_partition_continue
+    cmpb $0x83, 4(%eax)
     je .check_partition_done
+.check_partition_continue:
     addw $0x10, %ax
     jmp .check_partition_next
 .check_partition_failed:

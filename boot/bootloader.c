@@ -180,7 +180,6 @@ asm (".code32\n");
 
 void pm_main()
 {
-
     *((uint8_t *)0x0b8000) = '!';
     *((uint8_t *)0x0b8001) = 0x0e;
     while (1);
