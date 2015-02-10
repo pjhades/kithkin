@@ -16,7 +16,32 @@ _start:
     movb $0x03, %al
     int $0x10
 
-    /* print status */
+    pushw $25
+    pushw $str_checking_partition
+    call print_string
+    popw %ax
+    popw %ax
+
+    /* check 4 partitions */
+    movb $4, %cl
+    movw $0x7c00, %bx
+    leal 446(%bx), %eax
+.check_partition_next:
+    testb %cl, %cl
+    jz .check_partition_failed
+    decb %cl
+    cmpb $0x80, (%eax)
+    je .check_partition_done
+    addw $0x10, %ax
+    jmp .check_partition_next
+.check_partition_failed:
+    pushw $28
+    pushw $str_error
+    call print_string
+    popw %ax
+    popw %ax
+    jmp .
+.check_partition_done:
     pushw $24
     pushw $str_loading_bootloader
     call print_string
@@ -84,6 +109,8 @@ print_string:
     ret
 
 
+str_checking_partition:
+    .ascii "Checking partitions ...\r\n"
 str_loading_bootloader:
     .ascii "Loading bootloader ...\r\n"
 str_error:

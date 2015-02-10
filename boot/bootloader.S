@@ -33,7 +33,7 @@ print_string:
 
 .globl jump_to_protected_mode
 jump_to_protected_mode:
-    ljmp    $BOOT_GDT_CODE<<3, $protected_mode_entry
+    ljmp    $BOOT_CS, $pm_entry
 
 /* leave this here for debugging */
 /*
@@ -46,20 +46,20 @@ gdtdesc:
   .word   0x17
   .long   gdt
 */
-    
+
+.equ stack, 0x07ffff
 
 .code32
-protected_mode_entry:
-    movw $BOOT_GDT_DATA<<3, %ax
+pm_entry:
+    movw $BOOT_DS, %ax
     movw %ax, %ds
     movw %ax, %es
     movw %ax, %fs
     movw %ax, %gs
     movw %ax, %ss
+    movl $stack, %esp
 
-    movb $0x30, %al
-    movb %al, %ds:(0x0b8000)
-    movb $0x0e, %al
-    movb %al, %ds:(0x0b8001)
+    call pm_main
 
     jmp .
+

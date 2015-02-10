@@ -2,7 +2,7 @@ asm (".code16gcc\n");
 
 #include <arch/x86.h>
 #include <arch/mmu.h>
-#include <include/common.h>
+#include <common.h>
 
 void print_string(char *s, int len);
 
@@ -135,9 +135,9 @@ uint64_t boot_gdt[] = {
     /* 0: null descriptor */
     [0] = SEG_DESC(0x0, 0x0, 0x0),
     /* 1: 32-bit read/executable code segment, 4k granularity, DPL 0 */
-    [BOOT_GDT_CODE] = SEG_DESC(0x0, 0xfffff, 0xc09a),
+    [BOOT_GDT_ENTRY_CODE] = SEG_DESC(0x0, 0xfffff, 0xc09a),
     /* 2: 32-bit read/write data segment, 4k granularity, DPL 0*/
-    [BOOT_GDT_DATA] = SEG_DESC(0x0, 0xfffff, 0xc092),
+    [BOOT_GDT_ENTRY_DATA] = SEG_DESC(0x0, 0xfffff, 0xc092),
 };
 
 struct gdt_ptr {
@@ -173,4 +173,15 @@ void main(void)
 
     print_string("Switching to protected mode ...\r\n", 33);
     enter_protected_mode();
+}
+
+/* run in protected mode */
+asm (".code32\n");
+
+void pm_main()
+{
+
+    *((uint8_t *)0x0b8000) = '!';
+    *((uint8_t *)0x0b8001) = 0x0e;
+    while (1);
 }
