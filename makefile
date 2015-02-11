@@ -11,13 +11,20 @@ bootsec: boot/bootsector.s
 	as $< -o boot/sec.o
 	ld -Ttext=0x7c00 --oformat binary -nostdlib -static boot/sec.o -o boot/sec.bin
 
-bootldr: boot/bootloader.S boot/bootloader.c arch/x86.o
+bootldr: boot/bootloader.S boot/bootloader.c arch/x86.o driver/ide.o
 	gcc $(INC) -nostdinc -m32 -c boot/bootloader.S -o boot/ldr_asm.o
 	gcc $(INC) -nostdinc -m32 -c boot/bootloader.c -o boot/ldr_c.o
-	ld -T boot/linker.ld -m elf_i386 boot/ldr_asm.o boot/ldr_c.o arch/x86.o -o boot/ldr.elf
+	ld -T boot/linker.ld -m elf_i386 \
+		boot/ldr_asm.o \
+		boot/ldr_c.o \
+		arch/x86.o \
+		driver/ide.o -o boot/ldr.elf
 	objcopy -j .text -j .rodata -j .bss -j .data -O binary boot/ldr.elf boot/ldr.bin
 
 arch/x86.o: arch/x86.c
+	gcc $(INC) -nostdinc -m32 -c $< -o $@
+
+driver/ide.o: driver/ide.c
 	gcc $(INC) -nostdinc -m32 -c $< -o $@
 
 kern: kernel/entry.S

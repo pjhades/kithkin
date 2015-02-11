@@ -1,8 +1,9 @@
-asm (".code16gcc\n");
-
+#include <common.h>
 #include <arch/x86.h>
 #include <arch/mmu.h>
-#include <common.h>
+#include <driver/ide.h>
+
+asm (".code16gcc\n");
 
 uint8_t cursor_row, cursor_col;
 
@@ -189,12 +190,28 @@ void main(void)
     enter_protected_mode();
 }
 
+
 /* run in protected mode */
 asm (".code32\n");
 
-/* debug only */
-static void print_byte(char ch)
+// TODO replace this with console functions
+static void pm_printc(char ch)
 {
+    if (ch == ' ') {
+        if (++cursor_col == 80)
+            goto newline;
+        return;
+    }
+    if (ch == '\n') {
+newline:
+        ++cursor_row;
+        cursor_col = 0;
+        return;
+    }
+    if (ch == '\r') {
+        cursor_col = 0;
+        return;
+    }
     *((uint8_t *)0x0b8000 + ((cursor_row * 80 + cursor_col) << 1)) = ch;
     *((uint8_t *)0x0b8001 + ((cursor_row * 80 + cursor_col) << 1)) = 0x0e;
     if (++cursor_col == 80) {
@@ -203,38 +220,115 @@ static void print_byte(char ch)
     }
 }
 
-/* debug only */
-static void print_s(char *s)
+// TODO replace this with console functions
+static void pm_print(char *s, int len)
 {
-    for (; *s; s++)
-        print_byte(*s);
+    for (; len; s++, len--)
+        pm_printc(*s);
+}
+
+// TODO replace this with console functions
+static void pm_printhex(uint32_t hex, int unit)
+{
+    /* unit = 1, 2, 4 */
+    char *table = "0123456789abcdef";
+    uint32_t v32;
+    uint16_t v16;
+    uint8_t v8;
+
+    if (unit == 1) {
+        if (hex == 0)
+            pm_print("00 ", 3);
+        else {
+            v32 = hex;
+            while (v32) {
+                v8 = v32 % 256;
+                pm_printc(table[(v8 & 0xf0) >> 4]);
+                pm_printc(table[v8 & 0x0f]);
+                pm_printc(' ');
+                v32 >>= 8;
+            }
+        }
+    }
+    else if (unit == 2) {
+        if (hex == 0)
+            pm_print("0000 ", 5);
+        else {
+            v32 = hex;
+            while (v32) {
+                v16 = v32 % 65536;
+                pm_printc(table[(v16 & 0xf000) >> 12]);
+                pm_printc(table[(v16 & 0x0f00) >> 8]);
+                pm_printc(table[(v16 & 0x00f0) >> 4]);
+                pm_printc(table[v16 & 0x0f]);
+                pm_printc(' ');
+                v32 >>= 16;
+            }
+        }
+    }
+    else {
+        if (hex == 0)
+            pm_print("00000000 ", 9);
+        else {
+            v32 = hex;
+            pm_printc(table[(v32 & 0xf0000000) >> 28]);
+            pm_printc(table[(v32 & 0x0f000000) >> 24]);
+            pm_printc(table[(v32 & 0x00f00000) >> 20]);
+            pm_printc(table[(v32 & 0x000f0000) >> 16]);
+            pm_printc(table[(v32 & 0x0000f000) >> 12]);
+            pm_printc(table[(v32 & 0x00000f00) >> 8]);
+            pm_printc(table[(v32 & 0x000000f0) >> 4]);
+            pm_printc(table[v32 & 0x0f]);
+            pm_printc(' ');
+        }
+    }
+}
+
+static int load_kernel(void) {
+    uint8_t *addr, data[4096];
+    uint32_t lba;
+    int count;
+
+    addr = (uint8_t *)0x7dbe; /* 0x7c00 + 446 */
+    /*
+     * bootsector guarantees there must be
+     * a valid linux partition
+     */
+    while (*addr != 0x80 || *(addr + 4) != 0x83)
+        addr += 0x10;
+    lba = *((uint32_t *)(addr + 8)); /* LBA of first sector in partition */
+
+    if (ide_read(0x0, lba + 2, 1, data)) /* ext2 superblock starts at byte 1024 */
+        return -1;
+
+    count = 0;
+    for (addr = data; addr < data + 512; addr++) {
+        pm_printhex(*addr, 1);
+        ++count;
+        if (count % 16 == 0)
+            pm_printc('\n');
+        else if (count % 8 == 0)
+            pm_printc(' ');
+    }
+
+    return 0;
 }
 
 void pm_main()
 {
-    uint8_t *addr, id1, id2;
-    uint32_t lba;
+    uint8_t id1, id2;
+    struct ide_dev drv;
 
-    addr = (uint8_t *)0x7dbe; /* 0x7c00 + 446 */
-    /* bootsector guarantees there must be a valid linux partition */
-    while (*addr != 0x80 || *(addr + 4) != 0x83)
-        addr += 0x10;
-    lba = *(addr + 8); /* LBA of first sector in partition */
+    ide_init();
+    if (ide_read_identity(&drv.iden)) {
+        pm_print("Failed to read IDE identity", 27);
+        while (1);
+    }
 
-    /*
-    outb(0x3f6, 0x04);
-    outb(0x3f6, 0x0);
-    id1 = inb(0x1f4);
-    id2 = inb(0x1f5);
-    if (id1 == 0x0 && id2 == 0x0)
-        print_s("pata");
-    if (id1 == 0x14 && id2 == 0xeb)
-        print_s("patapi");
-    if (id1 == 0x3c && id2 == 0xc3)
-        print_s("sata");
-    if (id1 == 0x69 && id2 == 0x96)
-        print_s("satapi");
-    */
+    if (load_kernel()) {
+        pm_print("Failed to read IDE identity", 27);
+        while (1);
+    }
 
     while (1);
 }
