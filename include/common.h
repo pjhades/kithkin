@@ -17,5 +17,6 @@ typedef long long          int64_t;
 
 #define MEM_E820_MAX 128
 
+#define PTR2LBA(ptr) (ptr >> 9)
 
 #endif

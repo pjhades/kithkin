@@ -10,7 +10,7 @@
 
 struct ide_dev idv;
 
-int ide_poll(void)
+static int ide_poll(void)
 {
     int i;
     uint8_t value;
@@ -67,22 +67,22 @@ int ide_read_identity(struct ide_identity *iden)
 /* Only support LBA28 now so that
  * lba_hi should * always be 0.
  */
-int ide_read(uint32_t lba_hi, uint32_t lba_lo, uint8_t n_sec, uint8_t *data)
+int ide_read(uint64_t lba, uint8_t n_sec, uint8_t *data)
 {
-    uint8_t lba[6] = {0};
+    uint8_t lba_bytes[6] = {0};
     int i, status;
 
-    lba[0] = lba_lo & 0x000000ff;
-    lba[1] = (lba_lo & 0x0000ff00) >> 8;
-    lba[2] = (lba_lo & 0x00ff0000) >> 16;
+    lba_bytes[0] = lba & 0x000000ff;
+    lba_bytes[1] = (lba & 0x0000ff00) >> 8;
+    lba_bytes[2] = (lba & 0x00ff0000) >> 16;
 
     while (inb(IDE_PRI_STAT) & IDE_STAT_BSY)
         ;
-    outb(IDE_PRI_DRVSEL, 0xe0 | ((lba_lo >> 24) & 0x0f));
+    outb(IDE_PRI_DRVSEL, 0xe0 | ((lba >> 24) & 0x0f));
     outb(IDE_PRI_SECCOUNT, n_sec);
-    outb(IDE_PRI_LBA0, lba[0]);
-    outb(IDE_PRI_LBA1, lba[1]);
-    outb(IDE_PRI_LBA2, lba[2]);
+    outb(IDE_PRI_LBA0, lba_bytes[0]);
+    outb(IDE_PRI_LBA1, lba_bytes[1]);
+    outb(IDE_PRI_LBA2, lba_bytes[2]);
     outb(IDE_PRI_CMD, IDE_CMD_PIO_READ);
 
     for (i = 0; i < n_sec; i++) {
@@ -94,22 +94,22 @@ int ide_read(uint32_t lba_hi, uint32_t lba_lo, uint8_t n_sec, uint8_t *data)
     return 0;
 }
 
-int ide_write(uint32_t lba_hi, uint32_t lba_lo, uint8_t n_sec, uint8_t *data)
+int ide_write(uint64_t lba, uint8_t n_sec, uint8_t *data)
 {
-    uint8_t lba[6] = {0};
+    uint8_t lba_bytes[6] = {0};
     int i, status;
 
-    lba[0] = lba_lo & 0x000000ff;
-    lba[1] = (lba_lo & 0x0000ff00) >> 8;
-    lba[2] = (lba_lo & 0x00ff0000) >> 16;
+    lba_bytes[0] = lba & 0x000000ff;
+    lba_bytes[1] = (lba & 0x0000ff00) >> 8;
+    lba_bytes[2] = (lba & 0x00ff0000) >> 16;
 
     while (inb(IDE_PRI_STAT) & IDE_STAT_BSY)
         ;
-    outb(IDE_PRI_DRVSEL, 0xe0 | ((lba_lo >> 24) & 0x0f));
+    outb(IDE_PRI_DRVSEL, 0xe0 | ((lba >> 24) & 0x0f));
     outb(IDE_PRI_SECCOUNT, n_sec);
-    outb(IDE_PRI_LBA0, lba[0]);
-    outb(IDE_PRI_LBA1, lba[1]);
-    outb(IDE_PRI_LBA2, lba[2]);
+    outb(IDE_PRI_LBA0, lba_bytes[0]);
+    outb(IDE_PRI_LBA1, lba_bytes[1]);
+    outb(IDE_PRI_LBA2, lba_bytes[2]);
     outb(IDE_PRI_CMD, IDE_CMD_PIO_READ);
 
     for (i = 0; i < n_sec; i++) {

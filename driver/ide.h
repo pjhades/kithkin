@@ -68,5 +68,7 @@ struct ide_dev {
 
 void ide_init(void);
 int ide_read_identity(struct ide_identity *iden);
+int ide_read(uint64_t lba, uint8_t n_sec, uint8_t *data);
+int ide_write(uint64_t lba, uint8_t n_sec, uint8_t *data);
 
 #endif

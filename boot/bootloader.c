@@ -2,6 +2,7 @@
 #include <arch/x86.h>
 #include <arch/mmu.h>
 #include <driver/ide.h>
+#include <fs/ext2.h>
 
 asm (".code16gcc\n");
 
@@ -285,31 +286,47 @@ static void pm_printhex(uint32_t hex, int unit)
 }
 
 static int load_kernel(void) {
-    uint8_t *addr, data[4096];
-    uint32_t lba;
-    int count;
+    uint8_t *addr, block[4096];
+    uint32_t n_blkgrps, grp_id, blk_size, n_desc_blks, blk_id;
+    uint64_t offset;
+    struct ext2_superblock sb;
+    struct ext2_block_group_desc *desc_table;
 
     addr = (uint8_t *)0x7dbe; /* 0x7c00 + 446 */
-    /*
-     * bootsector guarantees there must be
-     * a valid linux partition
-     */
     while (*addr != 0x80 || *(addr + 4) != 0x83)
         addr += 0x10;
-    lba = *((uint32_t *)(addr + 8)); /* LBA of first sector in partition */
+    offset = (*((uint32_t *)(addr + 8))) << 9;
 
-    if (ide_read(0x0, lba + 2, 1, data)) /* ext2 superblock starts at byte 1024 */
+    /* Read superblock */
+    if (ide_read(PTR2LBA(offset + 1024), 2, (uint8_t *)&sb))
         return -1;
 
-    count = 0;
-    for (addr = data; addr < data + 512; addr++) {
-        pm_printhex(*addr, 1);
-        ++count;
-        if (count % 16 == 0)
-            pm_printc('\n');
-        else if (count % 8 == 0)
-            pm_printc(' ');
-    }
+    /* Read group descriptor table */
+    offset += 2048;
+    blk_size = 1024 << sb.sb_log_block_size;
+    n_blkgrps = (sb.sb_n_blocks + sb.sb_n_blocks_per_blkgrp - 1)
+        / sb.sb_n_blocks_per_blkgrp;
+    grp_id = (EXT2_ROOT_INODE - 1) / sb.sb_n_inodes_per_blkgrp;
+    n_desc_blks = (sizeof(struct ext2_block_group_desc) * n_blkgrps
+            + blk_size - 1) / blk_size;
+    blk_id = grp_id / n_desc_blks;
+
+    if (ext2_read_block(&sb, offset, block))
+        return -1;
+
+    desc_table = (struct ext2_block_group_desc *)block;
+    pm_printhex(desc_table[grp_id].bg_block_bitmap, 4);
+    pm_printc('\n');
+    pm_printhex(desc_table[grp_id].bg_inode_bitmap, 4);
+    pm_printc('\n');
+    pm_printhex(desc_table[grp_id].bg_inode_table, 4);
+    pm_printc('\n');
+    pm_printhex(desc_table[grp_id].bg_n_free_blocks, 2);
+    pm_printc('\n');
+    pm_printhex(desc_table[grp_id].bg_n_free_inodes, 2);
+    pm_printc('\n');
+    pm_printhex(desc_table[grp_id].bg_n_dirs, 2);
+    pm_printc('\n');
 
     return 0;
 }
