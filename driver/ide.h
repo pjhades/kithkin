@@ -48,6 +48,8 @@
 #define IDE_CMD_PIO_WRITE   0x30
 #define IDE_CMD_CACHE_FLUSH 0xe7
 
+#define PTR2LBA(ptr) (ptr >> 9)
+
 /* Ignore most of the fields */
 struct ide_identity {
     uint16_t config;

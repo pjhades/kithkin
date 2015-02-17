@@ -30,6 +30,8 @@ struct ext2_superblock {
     uint16_t sb_uid; /* User that can use reserved blocks */
     uint16_t sb_gid; /* Group that can use reserved blocks */
     /* extended fields ... */
+    uint32_t sb_first_inode; /* First non-reserved inode */
+    uint32_t sb_inode_size;
 } __attribute__((packed));
 
 struct ext2_block_group_desc {
@@ -43,6 +45,34 @@ struct ext2_block_group_desc {
     uint32_t __reserved[3];
 } __attribute__((packed));
 
+#define EXT2_N_DIRECT_BLK_PTR 12
+#define EXT2_1_INDIRECT_BLK_PTR EXT2_N_DIRECT_BLK_PTR
+#define EXT2_2_INDIRECT_BLK_PTR (EXT2_1_INDIRECT_BLK_PTR + 1)
+#define EXT2_3_INDIRECT_BLK_PTR (EXT2_2_INDIRECT_BLK_PTR + 1)
+#define EXT2_N_BLK_PTRS (EXT2_3_INDIRECT_BLK_PTR + 1)
+
+struct ext2_inode {
+    uint16_t i_mode;
+    uint16_t i_uid;
+    uint32_t i_size_lo32;
+    uint32_t i_atime;
+    uint32_t i_ctime;
+    uint32_t i_mtime;
+    uint32_t i_dtime;
+    uint16_t i_gid;
+    uint16_t i_n_links;
+    uint32_t i_n_sectors;
+    uint32_t i_flags;
+    uint32_t i_os_value1;
+    uint32_t i_blocks[EXT2_N_BLK_PTRS];
+    uint32_t i_generation;
+    uint32_t i_file_acl;
+    uint32_t i_dir_acl;
+    uint32_t i_frag_blk;
+    uint32_t i_os_value2[3];
+} __attribute__((packed));
+
+// TODO this should deal with block id rather than byte offset
 int ext2_read_block(struct ext2_superblock *sb, uint64_t offset, uint8_t *block);
 
 #endif

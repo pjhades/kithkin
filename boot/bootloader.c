@@ -97,6 +97,7 @@ struct mem_e820_entry {
     uint32_t attr;
 };
 
+#define MEM_E820_MAX 128
 struct mem_e820 {
     uint32_t n_regions;
     struct mem_e820_entry regions[MEM_E820_MAX];
@@ -285,24 +286,31 @@ static void pm_printhex(uint32_t hex, int unit)
     }
 }
 
+#include <lib/string.h>
+
 static int load_kernel(void) {
+    int i;
     uint8_t *addr, block[4096];
-    uint32_t n_blkgrps, grp_id, blk_size, n_desc_blks, blk_id;
+    uint32_t n_blkgrps, grp_id, blk_size, n_desc_blks, blk_id,
+             inode_idx;
     uint64_t offset;
     struct ext2_superblock sb;
-    struct ext2_block_group_desc *desc_table;
+    struct ext2_block_group_desc *desc_table, desc;
+    struct ext2_inode *inodes, inode;
 
     addr = (uint8_t *)0x7dbe; /* 0x7c00 + 446 */
     while (*addr != 0x80 || *(addr + 4) != 0x83)
         addr += 0x10;
     offset = (*((uint32_t *)(addr + 8))) << 9;
 
+    // TODO this shit should be abstracted
     /* Read superblock */
     if (ide_read(PTR2LBA(offset + 1024), 2, (uint8_t *)&sb))
         return -1;
 
-    /* Read group descriptor table */
-    offset += 2048;
+    /* Find the group descriptor table for the descriptor
+     * of the group where the inode of the root directory resides.
+     */
     blk_size = 1024 << sb.sb_log_block_size;
     n_blkgrps = (sb.sb_n_blocks + sb.sb_n_blocks_per_blkgrp - 1)
         / sb.sb_n_blocks_per_blkgrp;
@@ -311,22 +319,28 @@ static int load_kernel(void) {
             + blk_size - 1) / blk_size;
     blk_id = grp_id / n_desc_blks;
 
-    if (ext2_read_block(&sb, offset, block))
+    if (ext2_read_block(&sb, offset + 2048 + blk_id * blk_size, block))
         return -1;
 
     desc_table = (struct ext2_block_group_desc *)block;
-    pm_printhex(desc_table[grp_id].bg_block_bitmap, 4);
-    pm_printc('\n');
-    pm_printhex(desc_table[grp_id].bg_inode_bitmap, 4);
-    pm_printc('\n');
-    pm_printhex(desc_table[grp_id].bg_inode_table, 4);
-    pm_printc('\n');
-    pm_printhex(desc_table[grp_id].bg_n_free_blocks, 2);
-    pm_printc('\n');
-    pm_printhex(desc_table[grp_id].bg_n_free_inodes, 2);
-    pm_printc('\n');
-    pm_printhex(desc_table[grp_id].bg_n_dirs, 2);
-    pm_printc('\n');
+    i = grp_id % (blk_size / sizeof(struct ext2_block_group_desc));
+    memcpy(&desc, &desc_table[i], sizeof(struct ext2_block_group_desc));
+
+    /* Find the block which contains the inode of the
+     * root directory.
+     */
+    inode_idx = (EXT2_ROOT_INODE - 1) % sb.sb_n_inodes_per_blkgrp;
+    blk_id = (inode_idx * sb.sb_inode_size) / blk_size;
+    if (ext2_read_block(&sb,
+                offset + (desc.bg_inode_table + blk_id) * blk_size, block))
+        return -1;
+
+    inodes = (struct ext2_inode *)block;
+    i = inode_idx % (blk_size / sb.sb_inode_size);
+    memcpy(&inode, &inodes[i], sizeof(struct ext2_inode));
+
+    pm_printhex(inode.i_mode, 2);
+    pm_printhex(inode.i_size_lo32, 4);
 
     return 0;
 }

@@ -15,8 +15,6 @@ typedef unsigned long long uint64_t;
 typedef long long          int64_t;
 #endif
 
-#define MEM_E820_MAX 128
-
-#define PTR2LBA(ptr) (ptr >> 9)
+typedef uint32_t size_t;
 
 #endif
