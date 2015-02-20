@@ -32,6 +32,7 @@ struct ext2_superblock {
     /* extended fields ... */
     uint32_t sb_first_inode; /* First non-reserved inode */
     uint32_t sb_inode_size;
+    uint8_t  __unused[932];
 } __attribute__((packed));
 
 struct ext2_block_group_desc {
@@ -72,7 +73,13 @@ struct ext2_inode {
     uint32_t i_os_value2[3];
 } __attribute__((packed));
 
-// TODO this should deal with block id rather than byte offset
-int ext2_read_block(struct ext2_superblock *sb, uint64_t offset, uint8_t *block);
+struct ext2_fsinfo {
+    struct ext2_superblock sb;
+    struct ext2_inode root;
+    uint64_t disk_start;
+};
+
+int ext2_read_block(struct ext2_fsinfo *fs, uint64_t blk_id, uint8_t *block);
+int ext2_get_fsinfo(struct ext2_fsinfo *fs);
 
 #endif
