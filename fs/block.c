@@ -1,99 +1,7 @@
 #include <common.h>
 #include <fs/ext2.h>
 #include <driver/ide.h>
-
-//extern uint8_t cursor_row, cursor_col;
-// TODO replace this with console functions
-#if 0
-static void pm_printc(char ch)
-{
-    if (ch == ' ') {
-        if (++cursor_col == 80)
-            goto newline;
-        return;
-    }
-    if (ch == '\n') {
-newline:
-        ++cursor_row;
-        cursor_col = 0;
-        return;
-    }
-    if (ch == '\r') {
-        cursor_col = 0;
-        return;
-    }
-    *((uint8_t *)0x0b8000 + ((cursor_row * 80 + cursor_col) << 1)) = ch;
-    *((uint8_t *)0x0b8001 + ((cursor_row * 80 + cursor_col) << 1)) = 0x0e;
-    if (++cursor_col == 80) {
-        cursor_col = 0;
-        ++cursor_row;
-    }
-}
-
-// TODO replace this with console functions
-static void pm_print(char *s, int len)
-{
-    for (; len; s++, len--)
-        pm_printc(*s);
-}
-
-// TODO replace this with console functions
-static void pm_printhex(uint32_t hex, int unit)
-{
-    /* unit = 1, 2, 4 */
-    char *table = "0123456789abcdef";
-    uint32_t v32;
-    uint16_t v16;
-    uint8_t v8;
-
-    if (unit == 1) {
-        if (hex == 0)
-            pm_print("00 ", 3);
-        else {
-            v32 = hex;
-            while (v32) {
-                v8 = v32 % 256;
-                pm_printc(table[(v8 & 0xf0) >> 4]);
-                pm_printc(table[v8 & 0x0f]);
-                pm_printc(' ');
-                v32 >>= 8;
-            }
-        }
-    }
-    else if (unit == 2) {
-        if (hex == 0)
-            pm_print("0000 ", 5);
-        else {
-            v32 = hex;
-            while (v32) {
-                v16 = v32 % 65536;
-                pm_printc(table[(v16 & 0xf000) >> 12]);
-                pm_printc(table[(v16 & 0x0f00) >> 8]);
-                pm_printc(table[(v16 & 0x00f0) >> 4]);
-                pm_printc(table[v16 & 0x0f]);
-                pm_printc(' ');
-                v32 >>= 16;
-            }
-        }
-    }
-    else {
-        if (hex == 0)
-            pm_print("00000000 ", 9);
-        else {
-            v32 = hex;
-            pm_printc(table[(v32 & 0xf0000000) >> 28]);
-            pm_printc(table[(v32 & 0x0f000000) >> 24]);
-            pm_printc(table[(v32 & 0x00f00000) >> 20]);
-            pm_printc(table[(v32 & 0x000f0000) >> 16]);
-            pm_printc(table[(v32 & 0x0000f000) >> 12]);
-            pm_printc(table[(v32 & 0x00000f00) >> 8]);
-            pm_printc(table[(v32 & 0x000000f0) >> 4]);
-            pm_printc(table[v32 & 0x0f]);
-            pm_printc(' ');
-        }
-    }
-}
-#endif
+#include <lib/string.h>
 
 int ext2_read_block(struct ext2_fsinfo *fs, uint64_t blk_id, uint8_t *block)
 {
@@ -105,7 +13,6 @@ int ext2_read_block(struct ext2_fsinfo *fs, uint64_t blk_id, uint8_t *block)
     return ide_read(PTR2LBA(offset), blk_size >> 9, block);
 }
 
-#include <lib/string.h>
 int ext2_get_root(struct ext2_fsinfo *fsinfo)
 {
     int i;
