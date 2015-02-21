@@ -167,17 +167,6 @@ static void enter_protected_mode(void)
     jump_to_protected_mode();
 }
 
-static void save_cursor_position(void)
-{
-    asm volatile(
-            "movb $0x03, %%ah\n\t"
-            "xorb %%bh, %%bh\n\t"
-            "int $0x10\n\t"
-            "movb %%dh, %%al\n\t"
-            :"=a"(vga.c_row), "=d"(vga.c_col)
-            );
-}
-
 void main(void)
 {
     print_string("Enabling A20 line ...\r\n", 23);
@@ -189,7 +178,6 @@ void main(void)
         die();
 
     print_string("Switching to protected mode ...\r\n", 33);
-    save_cursor_position(); /* to continue printing */
     enter_protected_mode();
 }
 
@@ -212,8 +200,9 @@ static int load_kernel(void) {
 
     ext2_get_fsinfo(&fsinfo);
 
-    pm_printhex(fsinfo.root_inode.i_mode, 2);
-    pm_printhex(fsinfo.root_inode.i_size_lo32, 4);
+    cons_puthex(fsinfo.root_inode.i_mode);
+    cons_putc(' ');
+    cons_puthex(fsinfo.root_inode.i_size_lo32);
 
     return 0;
 }
@@ -223,21 +212,18 @@ void pm_main()
     uint8_t id1, id2;
     struct ide_dev drv;
 
+    cons_clear_screen();
+
     ide_init();
     if (ide_read_identity(&drv.iden)) {
-        pm_print("Failed to read IDE identity", 27);
+        cons_puts("Failed to read IDE identity\n");
         while (1);
     }
 
     if (load_kernel()) {
-        pm_print("Failed to read IDE identity", 27);
+        cons_puts("Failed to read IDE identity\n");
         while (1);
     }
-
-    outb(0x3d4, 14);
-    outb(0x3d5, 0);
-    outb(0x3d4, 15);
-    outb(0x3d5, 0);
 
     while (1);
 }
