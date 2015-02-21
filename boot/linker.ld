@@ -1,7 +1,7 @@
 SECTIONS {
     . = 0x500;
     .text : {
-        *(.text*);
+        *(*.text*);
     }
     .data : {
         *(.rodata .data);

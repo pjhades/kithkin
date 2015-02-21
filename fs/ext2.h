@@ -31,8 +31,8 @@ struct ext2_superblock {
     uint16_t sb_gid; /* Group that can use reserved blocks */
     /* extended fields ... */
     uint32_t sb_first_inode; /* First non-reserved inode */
-    uint32_t sb_inode_size;
-    uint8_t  __unused[932];
+    uint16_t sb_inode_size;
+    uint8_t  __unused[934];
 } __attribute__((packed));
 
 struct ext2_block_group_desc {
@@ -75,7 +75,7 @@ struct ext2_inode {
 
 struct ext2_fsinfo {
     struct ext2_superblock sb;
-    struct ext2_inode root;
+    struct ext2_inode root_inode;
     uint64_t disk_start;
 };
 

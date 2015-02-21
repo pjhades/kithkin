@@ -289,15 +289,9 @@ static void pm_printhex(uint32_t hex, int unit)
 }
 
 #include <fs/ext2.h>
-#include <lib/string.h>
 
 static int load_kernel(void) {
-    int i;
-    uint8_t *addr, block[4096];
-    uint32_t n_blkgrps, grp_id, blk_size, n_desc_blks, blk_id,
-             inode_idx;
-    struct ext2_block_group_desc *desc_table, desc;
-    struct ext2_inode *inodes, inode;
+    uint8_t *addr;
     struct ext2_fsinfo fsinfo;
 
     /* get LBA of first sector from partition table */
@@ -305,42 +299,11 @@ static int load_kernel(void) {
     while (*addr != 0x80 || *(addr + 4) != 0x83)
         addr += 0x10;
     fsinfo.disk_start = (*((uint32_t *)(addr + 8))) << 9;
+
     ext2_get_fsinfo(&fsinfo);
 
-    /* Find the group descriptor table for the descriptor
-     * of the group where the inode of the root directory resides.
-     */
-    blk_size = 1024 << fsinfo.sb.sb_log_block_size;
-    n_blkgrps = (fsinfo.sb.sb_n_blocks + fsinfo.sb.sb_n_blocks_per_blkgrp - 1)
-        / fsinfo.sb.sb_n_blocks_per_blkgrp;
-    grp_id = (EXT2_ROOT_INODE - 1) / fsinfo.sb.sb_n_inodes_per_blkgrp;
-    /* blk_id is the block ID starting from the descriptor table,
-     * so we add 1 for the super block
-     */
-    blk_id = grp_id / (blk_size / sizeof(struct ext2_block_group_desc));
-
-    if (ext2_read_block(&fsinfo, fsinfo.sb.sb_first_data_block + blk_id + 1,
-                block))
-        return -1;
-
-    desc_table = (struct ext2_block_group_desc *)block;
-    i = grp_id % (blk_size / sizeof(struct ext2_block_group_desc));
-    memcpy(&desc, &desc_table[i], sizeof(struct ext2_block_group_desc));
-
-    /* Find the block which contains the inode
-     * of the root directory.
-     */
-    inode_idx = (EXT2_ROOT_INODE - 1) % fsinfo.sb.sb_n_inodes_per_blkgrp;
-    blk_id = (inode_idx * fsinfo.sb.sb_inode_size) / blk_size;
-    if (ext2_read_block(&fsinfo, desc.bg_inode_table + blk_id, block))
-        return -1;
-
-    inodes = (struct ext2_inode *)block;
-    i = inode_idx % (blk_size / fsinfo.sb.sb_inode_size);
-    memcpy(&inode, &inodes[i], sizeof(struct ext2_inode));
-
-    pm_printhex(inode.i_mode, 2);
-    pm_printhex(inode.i_size_lo32, 4);
+    pm_printhex(fsinfo.root_inode.i_mode, 2);
+    pm_printhex(fsinfo.root_inode.i_size_lo32, 4);
 
     return 0;
 }
