@@ -3,6 +3,8 @@
 
 #define EXT2_ROOT_INODE 2
 
+#define EXT2_NAME_MAX 255
+
 struct ext2_superblock {
     uint32_t sb_n_inodes;
     uint32_t sb_n_blocks;
@@ -72,6 +74,14 @@ struct ext2_inode {
     uint32_t i_frag_blk;
     uint32_t i_os_value2[3];
 } __attribute__((packed));
+
+struct ext2_direntry {
+    uint32_t d_inode;
+    uint16_t d_rec_len;
+    uint8_t  d_name_len;
+    uint8_t  d_type;
+    char     name[];
+};
 
 struct ext2_fsinfo {
     struct ext2_superblock sb;

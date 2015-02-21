@@ -21,6 +21,7 @@ bootldr: boot/bootloader.S boot/bootloader.c arch driver fs
 		boot/ldr_c.o \
 		arch/x86.o \
 		driver/ide.o \
+		driver/tty.o \
 		fs/ext2.o \
 		-o boot/ldr.elf
 	objcopy -j .text -j .rodata -j .bss -j .data -O binary boot/ldr.elf boot/ldr.bin
@@ -33,6 +34,7 @@ arch:
 
 driver:
 	gcc $(INC) -nostdinc -m32 -c driver/ide.c -o driver/ide.o
+	gcc $(INC) -nostdinc -m32 -c driver/tty.c -o driver/tty.o
 
 kern:
 	gcc $(INC) -nostdinc -m32 -c kernel/entry.S -o kernel/kernel.o

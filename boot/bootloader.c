@@ -2,10 +2,12 @@
 #include <arch/x86.h>
 #include <arch/mmu.h>
 #include <driver/ide.h>
+#include <driver/tty.h>
+#include <fs/ext2.h>
 
 asm (".code16gcc\n");
 
-uint8_t cursor_row, cursor_col;
+struct console vga;
 
 void print_string(char *s, int len);
 
@@ -172,7 +174,7 @@ static void save_cursor_position(void)
             "xorb %%bh, %%bh\n\t"
             "int $0x10\n\t"
             "movb %%dh, %%al\n\t"
-            :"=a"(cursor_row), "=d"(cursor_col)
+            :"=a"(vga.c_row), "=d"(vga.c_col)
             );
 }
 
@@ -197,98 +199,6 @@ void main(void)
  * ----------------------------------------------
  */
 asm (".code32\n");
-
-// TODO replace this with console functions
-static void pm_printc(char ch)
-{
-    if (ch == ' ') {
-        if (++cursor_col == 80)
-            goto newline;
-        return;
-    }
-    if (ch == '\n') {
-newline:
-        ++cursor_row;
-        cursor_col = 0;
-        return;
-    }
-    if (ch == '\r') {
-        cursor_col = 0;
-        return;
-    }
-    *((uint8_t *)0x0b8000 + ((cursor_row * 80 + cursor_col) << 1)) = ch;
-    *((uint8_t *)0x0b8001 + ((cursor_row * 80 + cursor_col) << 1)) = 0x0e;
-    if (++cursor_col == 80) {
-        cursor_col = 0;
-        ++cursor_row;
-    }
-}
-
-// TODO replace this with console functions
-static void pm_print(char *s, int len)
-{
-    for (; len; s++, len--)
-        pm_printc(*s);
-}
-
-// TODO replace this with console functions
-static void pm_printhex(uint32_t hex, int unit)
-{
-    /* unit = 1, 2, 4 */
-    char *table = "0123456789abcdef";
-    uint32_t v32;
-    uint16_t v16;
-    uint8_t v8;
-
-    if (unit == 1) {
-        if (hex == 0)
-            pm_print("00 ", 3);
-        else {
-            v32 = hex;
-            while (v32) {
-                v8 = v32 % 256;
-                pm_printc(table[(v8 & 0xf0) >> 4]);
-                pm_printc(table[v8 & 0x0f]);
-                pm_printc(' ');
-                v32 >>= 8;
-            }
-        }
-    }
-    else if (unit == 2) {
-        if (hex == 0)
-            pm_print("0000 ", 5);
-        else {
-            v32 = hex;
-            while (v32) {
-                v16 = v32 % 65536;
-                pm_printc(table[(v16 & 0xf000) >> 12]);
-                pm_printc(table[(v16 & 0x0f00) >> 8]);
-                pm_printc(table[(v16 & 0x00f0) >> 4]);
-                pm_printc(table[v16 & 0x0f]);
-                pm_printc(' ');
-                v32 >>= 16;
-            }
-        }
-    }
-    else {
-        if (hex == 0)
-            pm_print("00000000 ", 9);
-        else {
-            v32 = hex;
-            pm_printc(table[(v32 & 0xf0000000) >> 28]);
-            pm_printc(table[(v32 & 0x0f000000) >> 24]);
-            pm_printc(table[(v32 & 0x00f00000) >> 20]);
-            pm_printc(table[(v32 & 0x000f0000) >> 16]);
-            pm_printc(table[(v32 & 0x0000f000) >> 12]);
-            pm_printc(table[(v32 & 0x00000f00) >> 8]);
-            pm_printc(table[(v32 & 0x000000f0) >> 4]);
-            pm_printc(table[v32 & 0x0f]);
-            pm_printc(' ');
-        }
-    }
-}
-
-#include <fs/ext2.h>
 
 static int load_kernel(void) {
     uint8_t *addr;
@@ -323,6 +233,11 @@ void pm_main()
         pm_print("Failed to read IDE identity", 27);
         while (1);
     }
+
+    outb(0x3d4, 14);
+    outb(0x3d5, 0);
+    outb(0x3d4, 15);
+    outb(0x3d5, 0);
 
     while (1);
 }
