@@ -55,7 +55,7 @@ void cons_clear_screen(void)
             video[i][j] = 0x0e<<8;
 }
 
-void cons_putc(char ch)
+void cons_putchar(char ch)
 {
     vga_mem_ptr_t video = (vga_mem_ptr_t)VGA_MEM_DATA;
 
@@ -81,7 +81,7 @@ void cons_putc(char ch)
 void cons_puts(const char *s)
 {
     for (; *s; s++)
-        cons_putc(*s);
+        cons_putchar(*s);
 }
 
 void cons_puthex(uint32_t hex)
@@ -102,6 +102,8 @@ void cons_puthex(uint32_t hex)
         j += 2;
         i -= 2;
     }
+    if (j == 2)
+        j = 4;
     t[j] = '\0';
     cons_puts(t);
 }

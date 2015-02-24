@@ -38,7 +38,7 @@ driver:
 
 kern:
 	gcc $(INC) -nostdinc -m32 -c kernel/entry.S -o kernel/kernel.o
-	ld -Ttext=0x100000 -m elf_i386 kernel/kernel.o -o kernel/kernel
+	ld -Ttext=0x100000 -m elf_i386 kernel/kernel.o -o kernel/kernel.img
 
 .PHONY: clean
 clean:

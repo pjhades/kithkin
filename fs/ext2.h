@@ -54,6 +54,14 @@ struct ext2_block_group_desc {
 #define EXT2_3_INDIRECT_BLK_PTR (EXT2_2_INDIRECT_BLK_PTR + 1)
 #define EXT2_N_BLK_PTRS (EXT2_3_INDIRECT_BLK_PTR + 1)
 
+#define EXT2_TYPE_SOCK 0xc000
+#define EXT2_TYPE_LINK 0xa000
+#define EXT2_TYPE_REG  0x8000
+#define EXT2_TYPE_BLK  0x6000
+#define EXT2_TYPE_DIR  0x4000
+#define EXT2_TYPE_CHR  0x2000
+#define EXT2_TYPE_FIFO 0x1000
+
 struct ext2_inode {
     uint16_t i_mode;
     uint16_t i_uid;
@@ -80,7 +88,7 @@ struct ext2_direntry {
     uint16_t d_rec_len;
     uint8_t  d_name_len;
     uint8_t  d_type;
-    char     name[];
+    char     d_name[];
 };
 
 struct ext2_fsinfo {
@@ -91,5 +99,7 @@ struct ext2_fsinfo {
 
 int ext2_read_block(struct ext2_fsinfo *fs, uint64_t blk_id, uint8_t *block);
 int ext2_get_fsinfo(struct ext2_fsinfo *fs);
+int ext2_find_file(struct ext2_fsinfo *fs, const char *path,
+        struct ext2_inode *inode);
 
 #endif

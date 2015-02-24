@@ -189,20 +189,35 @@ void main(void)
 asm (".code32\n");
 
 static int load_kernel(void) {
+    int ret;
     uint8_t *addr;
-    struct ext2_fsinfo fsinfo;
+    struct ext2_fsinfo fs;
+    struct ext2_inode ino;
 
     /* get LBA of first sector from partition table */
     addr = (uint8_t *)0x7dbe; /* 0x7c00 + 446 */
     while (*addr != 0x80 || *(addr + 4) != 0x83)
         addr += 0x10;
-    fsinfo.disk_start = (*((uint32_t *)(addr + 8))) << 9;
+    fs.disk_start = (*((uint32_t *)(addr + 8))) << 9;
 
-    ext2_get_fsinfo(&fsinfo);
+    ext2_get_fsinfo(&fs);
 
-    cons_puthex(fsinfo.root_inode.i_mode);
-    cons_putc(' ');
-    cons_puthex(fsinfo.root_inode.i_size_lo32);
+    cons_puthex(fs.root_inode.i_mode);
+    cons_putchar(' ');
+    cons_puthex(fs.root_inode.i_size_lo32);
+    cons_putchar('\n');
+
+    if ((ret = ext2_find_file(&fs, "/boot/kernel.img", &ino)) == -1)
+        return -1;
+    if (ret == 0) {
+        cons_puts("Cannot find kernel image\n");
+        return 0;
+    }
+
+    cons_puthex(ino.i_mode);
+    cons_putchar(' ');
+    cons_puthex(ino.i_size_lo32);
+    cons_putchar('\n');
 
     return 0;
 }
@@ -221,7 +236,7 @@ void pm_main()
     }
 
     if (load_kernel()) {
-        cons_puts("Failed to read IDE identity\n");
+        cons_puts("Failed to load kernel\n");
         while (1);
     }
 
