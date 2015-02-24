@@ -17,7 +17,7 @@ int ext2_read_block(struct ext2_fsinfo *fs, uint64_t blk_id, uint8_t *block)
 /*
  * Find an inode according to the given inode ID
  */
-int ext2_find_inode(struct ext2_fsinfo *fs, uint32_t id,
+static int ext2_find_inode(struct ext2_fsinfo *fs, uint32_t id,
         struct ext2_inode *inode)
 {
     int i;
@@ -56,27 +56,24 @@ int ext2_find_inode(struct ext2_fsinfo *fs, uint32_t id,
 }
 
 /*
- * Search the directory @dir for @name, store the result
- * inode in @inode. Return 1 if found, 0 if not found,
- * and -1 if error occurred.
+ * Search the block @blk_id as the block of indirect level @level
+ * for the file @name, store the result inode in @inode.
  */
-int ext2_search_dir(struct ext2_fsinfo *fs, struct ext2_inode *dir,
-        const char *name, struct ext2_inode *inode)
+static int ext2_search_dir_indirect(struct ext2_fsinfo *fs, uint32_t blk_id,
+        const char *name, struct ext2_inode *inode, int level)
 {
-    int i;
+    int i, found;
     uint8_t block[4096], *p;
-    uint32_t blk_size = 1024 << fs->sb.sb_log_block_size;
+    uint32_t *blkids, n_blkid, blk_size;
     struct ext2_direntry *entry;
+    
+    blk_size = 1024 << fs->sb.sb_log_block_size;
+    n_blkid = blk_size >> 2;
 
-    if (!(dir->i_mode & EXT2_TYPE_DIR)) {
-        cons_puts("Current inode is not a directory\n");
+    if (ext2_read_block(fs, blk_id, block))
         return -1;
-    }
-    /* only search direct blocks */
-    for (i = 0; i < EXT2_N_DIRECT_BLK_PTR; i++) {
-        if (ext2_read_block(fs, dir->i_blocks[i], block))
-            return -1;
 
+    if (level <= 0) {
         p = block;
         while (p < block + blk_size) {
             entry = (struct ext2_direntry *)p;
@@ -88,7 +85,50 @@ int ext2_search_dir(struct ext2_fsinfo *fs, struct ext2_inode *dir,
             }
             p += entry->d_rec_len;
         }
+        return 0;
     }
+
+    blkids = (uint32_t *)block;
+    for (i = 0; i < n_blkid; i++) {
+        found = ext2_search_dir_indirect(fs, blkids[i], name, inode, level - 1);
+        /* continue only if not found */
+        if (found)
+            return found;
+    }
+    return 0;
+}
+
+/*
+ * Search the directory @dir for @name, store the result
+ * inode in @inode. Return 1 if found, 0 if not found,
+ * and -1 if error occurred.
+ */
+static int ext2_search_dir(struct ext2_fsinfo *fs, struct ext2_inode *dir,
+        const char *name, struct ext2_inode *inode)
+{
+    int i, found;
+    uint8_t block[4096], *p;
+    uint32_t blk_size = 1024 << fs->sb.sb_log_block_size;
+    struct ext2_direntry *entry;
+
+    if (!(dir->i_mode & EXT2_TYPE_DIR)) {
+        cons_puts("Current inode is not a directory\n");
+        return -1;
+    }
+    /* direct blocks */
+    for (i = 0; i < EXT2_N_DIRECT_BLK_PTR; i++) {
+        found = ext2_search_dir_indirect(fs, dir->i_blocks[i], name, inode, 0);
+        if (found)
+            return found;
+    }
+    /* indirect blocks */
+    for (i = 1; i <= 3; i++) {
+        found = ext2_search_dir_indirect(fs,
+                dir->i_blocks[EXT2_N_DIRECT_BLK_PTR + i - 1], name, inode, i);
+        if (found)
+            return found;
+    }
+
     return 0;
 }
 
