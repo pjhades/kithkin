@@ -4,7 +4,7 @@
 #include <driver/tty.h>
 #include <lib/string.h>
 
-int ext2_read_block(struct ext2_fsinfo *fs, uint64_t blk_id, uint8_t *block)
+static int ext2_read_block(struct ext2_fsinfo *fs, uint32_t blk_id, uint8_t *block)
 {
     uint32_t blk_size;
     uint64_t offset;

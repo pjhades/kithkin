@@ -97,7 +97,6 @@ struct ext2_fsinfo {
     uint64_t disk_start;
 };
 
-int ext2_read_block(struct ext2_fsinfo *fs, uint64_t blk_id, uint8_t *block);
 int ext2_get_fsinfo(struct ext2_fsinfo *fs);
 int ext2_find_file(struct ext2_fsinfo *fs, const char *path,
         struct ext2_inode *inode);
