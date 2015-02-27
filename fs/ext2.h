@@ -100,5 +100,7 @@ struct ext2_fsinfo {
 int ext2_get_fsinfo(struct ext2_fsinfo *fs);
 int ext2_find_file(struct ext2_fsinfo *fs, const char *path,
         struct ext2_inode *inode);
+size_t ext2_read_file(struct ext2_fsinfo *fs, struct ext2_inode *inode,
+        void *buf, size_t count);
 
 #endif

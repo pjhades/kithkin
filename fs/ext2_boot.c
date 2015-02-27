@@ -173,3 +173,55 @@ int ext2_get_fsinfo(struct ext2_fsinfo *fs)
         return -1;
     return 0;
 }
+
+static size_t ext2_read_file_indirect(struct ext2_fsinfo *fs, uint32_t blk_id,
+        int level, void **buf, size_t count)
+{
+    int i;
+    uint8_t block[4096];
+    uint32_t *blkids, n_blkid, blk_size;
+    size_t total = 0, n;
+
+    blk_size = 1024 << fs->sb.sb_log_block_size;
+    n_blkid = blk_size >> 2;
+
+    if (level <= 0) {
+        if (ext2_read_block(fs, blk_id, *buf))
+            return -1;
+        total += blk_size;
+        *buf += blk_size;
+        if (total >= count)
+            return count;
+        return total;
+    }
+
+    if (ext2_read_block(fs, blk_id, block))
+        return -1;
+    blkids = (uint32_t *)block;
+    for (i = 0; i < n_blkid; i++) {
+        n = ext2_read_file_indirect(fs, blkids[i], level - 1, buf, count - total);
+        total += n;
+        *buf += n;
+        if (total >= count)
+            return count;
+    }
+    return total;
+}
+
+size_t ext2_read_file(struct ext2_fsinfo *fs, struct ext2_inode *inode,
+        void *buf, size_t count)
+{
+    int i;
+    size_t total = 0, n;
+
+    for (i = 0; i < EXT2_N_BLK_PTRS; i++) {
+        n = ext2_read_file_indirect(fs, inode->i_blocks[i],
+                i < EXT2_N_DIRECT_BLK_PTR ? 0 : i - EXT2_N_DIRECT_BLK_PTR + 1,
+                &buf, count - total);
+        total += n;
+        buf += n;
+        if (total >= count)
+            return count;
+    }
+    return total;
+}

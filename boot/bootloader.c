@@ -1,4 +1,5 @@
 #include <common.h>
+#include <elf.h>
 #include <arch/x86.h>
 #include <arch/mmu.h>
 #include <driver/ide.h>
@@ -193,6 +194,7 @@ static int load_kernel(void) {
     uint8_t *addr;
     struct ext2_fsinfo fs;
     struct ext2_inode ino;
+    struct Elf32_Ehdr elf;
 
     /* get LBA of first sector from partition table */
     addr = (uint8_t *)0x7dbe; /* 0x7c00 + 446 */
@@ -218,6 +220,13 @@ static int load_kernel(void) {
     cons_putchar(' ');
     cons_puthex(ino.i_size_lo32);
     cons_putchar('\n');
+
+    ext2_read_file(&fs, &ino, &elf, sizeof(struct Elf32_Ehdr));
+    cons_puthex(elf.e_ident[0]);
+    cons_putchar('\n');
+    cons_putchar(elf.e_ident[1]);
+    cons_putchar(elf.e_ident[2]);
+    cons_putchar(elf.e_ident[3]);
 
     return 0;
 }
