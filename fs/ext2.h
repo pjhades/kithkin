@@ -2,7 +2,6 @@
 #define __EXT2_H__
 
 #define EXT2_ROOT_INODE 2
-
 #define EXT2_NAME_MAX 255
 
 struct ext2_superblock {
@@ -12,8 +11,8 @@ struct ext2_superblock {
     uint32_t sb_n_free_blocks;
     uint32_t sb_n_free_inodes;
     uint32_t sb_first_data_block; /* Block number of block containing superblock */
-    uint32_t sb_log_block_size; /* blocksize = 1024 << x */
-    uint32_t sb_log_frag_size; /* fragsize = + ? 1024 << x : 1024 >> -x */
+    uint32_t sb_log_block_size;   /* blocksize = 1024 << x */
+    uint32_t sb_log_frag_size;    /* fragsize = + ? 1024 << x : 1024 >> -x */
     uint32_t sb_n_blocks_per_blkgrp;
     uint32_t sb_n_frags_per_blkgrp;
     uint32_t sb_n_inodes_per_blkgrp;
@@ -97,11 +96,15 @@ struct ext2_fsinfo {
     uint64_t disk_start;
 };
 
+/*
+ * Hold information we need to pass along the way we
+ * read the blocks of an inode.
+ */
 struct ext2_fshelp {
     void *buf;
-    size_t count;
-    size_t total;
-    int index[4];
+    size_t count; /* number of bytes to read */
+    size_t total; /* number of bytes we've read */
+    int index[4]; /* start offset in each level of indirect block */
 };
 
 int boot_ext2_get_fsinfo(struct ext2_fsinfo *fs);

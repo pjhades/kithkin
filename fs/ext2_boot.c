@@ -201,6 +201,10 @@ static int ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
     return 0;
 }
 
+/*
+ * Read @count bytes from @inode, starting from the very beginning
+ * of the file. Put all read data in @buf. Return the bytes read.
+ */
 ssize_t boot_ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
         size_t count)
 {
@@ -217,6 +221,10 @@ ssize_t boot_ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *b
     return help.total;
 }
 
+/*
+ * Read @count bytes from @inode, starting from byte @offset.
+ * Put all read data in @buf. Return the bytes read.
+ */
 ssize_t boot_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
         size_t count, off_t offset)
 {
