@@ -204,11 +204,6 @@ static int load_kernel(void) {
 
     ext2_get_fsinfo(&fs);
 
-    cons_puthex(fs.root_inode.i_mode);
-    cons_putchar(' ');
-    cons_puthex(fs.root_inode.i_size_lo32);
-    cons_putchar('\n');
-
     if ((ret = ext2_find_file(&fs, "/boot/kernel.img", &ino)) == -1)
         return -1;
     if (ret == 0) {
@@ -216,12 +211,7 @@ static int load_kernel(void) {
         return 0;
     }
 
-    cons_puthex(ino.i_mode);
-    cons_putchar(' ');
-    cons_puthex(ino.i_size_lo32);
-    cons_putchar('\n');
-
-    ext2_read_file(&fs, &ino, &elf, sizeof(struct Elf32_Ehdr));
+    ext2_read(&fs, &ino, &elf, sizeof(struct Elf32_Ehdr));
     cons_puthex(elf.e_ident[0]);
     cons_putchar('\n');
     cons_putchar(elf.e_ident[1]);

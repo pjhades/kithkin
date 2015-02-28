@@ -58,4 +58,15 @@ typedef struct Elf32_Ehdr {
 #define EI_PAD     7
 #define EI_NIDENT  16
 
+typedef struct Elf32_Phdr {
+    Elf32_Word p_type;
+    Elf32_Off  p_offset;
+    Elf32_Addr p_vaddr;
+    Elf32_Addr p_paddr;
+    Elf32_Word p_filesz;
+    Elf32_Word p_memsz;
+    Elf32_Word p_flags;
+    Elf32_Word p_align;
+} Elf32_Phdr;
+
 #endif

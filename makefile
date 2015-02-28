@@ -1,6 +1,6 @@
 INC = -I. -I./include
 
-.PHONY: fs kern arch driver
+.PHONY: fs kern arch driver lib
 
 image: bootsec bootldr
 	dd conv=notrunc if=boot/sec.bin of=disk.img bs=446 count=1
@@ -13,9 +13,9 @@ bootsec: boot/bootsector.s
 	as $< -o boot/sec.o
 	ld -Ttext=0x7c00 --oformat binary -nostdlib -static boot/sec.o -o boot/sec.bin
 
-bootldr: boot/bootloader.S boot/bootloader.c arch driver fs
-	gcc $(INC) -nostdinc -m32 -c boot/bootloader.S -o boot/ldr_asm.o
-	gcc $(INC) -nostdinc -m32 -c boot/bootloader.c -o boot/ldr_c.o
+bootldr: boot/bootloader.S boot/bootloader.c arch driver fs lib
+	gcc $(INC) -ffreestanding -m32 -c boot/bootloader.S -o boot/ldr_asm.o
+	gcc $(INC) -ffreestanding -m32 -c boot/bootloader.c -o boot/ldr_c.o
 	ld -T boot/linker.ld -m elf_i386 \
 		boot/ldr_asm.o \
 		boot/ldr_c.o \
@@ -23,22 +23,26 @@ bootldr: boot/bootloader.S boot/bootloader.c arch driver fs
 		driver/ide.o \
 		driver/tty.o \
 		fs/ext2.o \
+		lib/lib.o \
 		-o boot/ldr.elf
 	objcopy -j .text -j .rodata -j .bss -j .data -O binary boot/ldr.elf boot/ldr.bin
 
 fs:
-	gcc $(INC) -nostdinc -m32 -c fs/*.c -o fs/ext2.o
+	gcc $(INC) -ffreestanding -m32 -c fs/*.c -o fs/ext2.o
 
 arch:
-	gcc $(INC) -nostdinc -m32 -c arch/x86.c -o arch/x86.o
+	gcc $(INC) -ffreestanding -m32 -c arch/x86.c -o arch/x86.o
 
 driver:
-	gcc $(INC) -nostdinc -m32 -c driver/ide.c -o driver/ide.o
-	gcc $(INC) -nostdinc -m32 -c driver/tty.c -o driver/tty.o
+	gcc $(INC) -ffreestanding -m32 -c driver/ide.c -o driver/ide.o
+	gcc $(INC) -ffreestanding -m32 -c driver/tty.c -o driver/tty.o
 
 kern:
-	gcc $(INC) -nostdinc -m32 -c kernel/entry.S -o kernel/kernel.o
+	gcc $(INC) -ffreestanding -m32 -c kernel/entry.S -o kernel/kernel.o
 	ld -Ttext=0x100000 -m elf_i386 kernel/kernel.o -o kernel/kernel.img
+
+lib:
+	gcc $(INC) -ffreestanding -m32 -c lib/*.c -o lib/lib.o
 
 .PHONY: clean
 clean:
