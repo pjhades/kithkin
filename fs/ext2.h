@@ -104,13 +104,12 @@ struct ext2_fshelp {
     int index[4];
 };
 
-/* TODO move these shit to ext2_boot.h for bootloader use only */
-int ext2_get_fsinfo(struct ext2_fsinfo *fs);
-int ext2_find_file(struct ext2_fsinfo *fs, const char *path,
+int boot_ext2_get_fsinfo(struct ext2_fsinfo *fs);
+int boot_ext2_find_file(struct ext2_fsinfo *fs, const char *path,
         struct ext2_inode *inode);
-ssize_t ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
+ssize_t boot_ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
         size_t count);
-ssize_t ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
+ssize_t boot_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
         size_t count, off_t offset);
 
 #endif

@@ -202,16 +202,16 @@ static int load_kernel(void) {
         addr += 0x10;
     fs.disk_start = (*((uint32_t *)(addr + 8))) << 9;
 
-    ext2_get_fsinfo(&fs);
+    boot_ext2_get_fsinfo(&fs);
 
-    if ((ret = ext2_find_file(&fs, "/boot/kernel.img", &ino)) == -1)
+    if ((ret = boot_ext2_find_file(&fs, "/boot/kernel.img", &ino)) == -1)
         return -1;
     if (ret == 0) {
         cons_puts("Cannot find kernel image\n");
         return 0;
     }
 
-    ext2_read(&fs, &ino, &elf, sizeof(struct Elf32_Ehdr));
+    boot_ext2_read(&fs, &ino, &elf, sizeof(struct Elf32_Ehdr));
     cons_puthex(elf.e_ident[0]);
     cons_putchar('\n');
     cons_putchar(elf.e_ident[1]);

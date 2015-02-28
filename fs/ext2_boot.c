@@ -138,7 +138,7 @@ static int ext2_search_dir(struct ext2_fsinfo *fs, struct ext2_inode *dir,
  * Return 1 if found, 0 if not found, and -1 if error
  * occurred.
  */
-int ext2_find_file(struct ext2_fsinfo *fs, const char *path,
+int boot_ext2_find_file(struct ext2_fsinfo *fs, const char *path,
         struct ext2_inode *inode)
 {
     int i, found = 0;
@@ -166,7 +166,7 @@ int ext2_find_file(struct ext2_fsinfo *fs, const char *path,
     return found;
 }
 
-int ext2_get_fsinfo(struct ext2_fsinfo *fs)
+int boot_ext2_get_fsinfo(struct ext2_fsinfo *fs)
 {
     if (ide_read(PTR2LBA(fs->disk_start + 1024), 2, (uint8_t *)&fs->sb))
         return -1;
@@ -209,7 +209,7 @@ static int ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
     return 0;
 }
 
-ssize_t ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
+ssize_t boot_ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
         size_t count)
 {
     int i, level;
@@ -225,7 +225,7 @@ ssize_t ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
     return help.total;
 }
 
-ssize_t ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
+ssize_t boot_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
         size_t count, off_t offset)
 {
     int i, off, level;
