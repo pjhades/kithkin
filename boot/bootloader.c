@@ -211,6 +211,7 @@ static int load_kernel(void) {
         return 0;
     }
 
+    cons_puts("Loading ELF...\n");
     boot_ext2_read(&fs, &ino, &elf, sizeof(struct Elf32_Ehdr));
     cons_puthex(elf.e_ident[0]);
     cons_putchar('\n');

@@ -106,7 +106,7 @@ static int ext2_search_dir_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
 static int ext2_search_dir(struct ext2_fsinfo *fs, struct ext2_inode *dir,
         const char *name, struct ext2_inode *inode)
 {
-    int i, found;
+    int i, found, level;
     uint8_t block[4096], *p;
     uint32_t blksz = 1024 << fs->sb.sb_log_block_size;
     struct ext2_direntry *entry;
@@ -115,21 +115,13 @@ static int ext2_search_dir(struct ext2_fsinfo *fs, struct ext2_inode *dir,
         cons_puts("Current inode is not a directory\n");
         return -1;
     }
-    // TODO merge these two shits
-    /* direct blocks */
-    for (i = 0; i < EXT2_N_DIRECT_BLK_PTR; i++) {
-        found = ext2_search_dir_indirect(fs, dir->i_blocks[i], name, inode, 0);
-        if (found)
-            return found;
-    }
-    /* indirect blocks */
-    for (i = 1; i <= 3; i++) {
-        found = ext2_search_dir_indirect(fs,
-                dir->i_blocks[EXT2_N_DIRECT_BLK_PTR + i - 1], name, inode, i);
-        if (found)
-            return found;
-    }
 
+    for (i = 0; i < EXT2_N_BLK_PTRS; i++) {
+        level = i < EXT2_N_DIRECT_BLK_PTR ? 0 : i - EXT2_N_DIRECT_BLK_PTR + 1;
+        found = ext2_search_dir_indirect(fs, dir->i_blocks[i], name, inode, level);
+        if (found)
+            return found;
+    }
     return 0;
 }
 
