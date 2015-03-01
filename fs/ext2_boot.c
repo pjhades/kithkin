@@ -180,9 +180,10 @@ static int ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
     if (level <= 0) {
         if (ext2_read_block(fs, blkid, block))
             return -1;
-        sz = blksz - help->index[0];
-        help->index[0] = 0;
+        sz = blksz - help->index[0] < help->count - help->total ?
+             blksz - help->index[0] : help->count - help->total;
         memcpy(help->buf, block + help->index[0], sz);
+        help->index[0] = 0;
         help->total += sz;
         help->buf += sz;
         return 0;

@@ -22,6 +22,8 @@ static void cons_scroll(void)
     for (i = 1; i < VGA_ROWS; i++)
         for (j = 0; j < VGA_COLS; j++)
             video[i - 1][j] = video[i][j];
+    for (j = 0; j < VGA_COLS; j++)
+        video[VGA_ROWS - 1][j] = 0;
     vga.c_row = VGA_ROWS - 1;
     vga.c_col = 0;
     cons_set_cursor();
