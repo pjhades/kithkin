@@ -190,12 +190,13 @@ void main(void)
 asm (".code32\n");
 
 static int load_kernel(void) {
-    int ret;
-    uint8_t *addr;
+    int i, ret, sz, loadsz;
+#define BUFSZ 1024
+    uint8_t *addr, buf[BUFSZ];
     struct ext2_fsinfo fs;
     struct ext2_inode ino;
     struct Elf32_Ehdr elf;
-    struct Elf32_Phdr prog_header;
+    struct Elf32_Phdr phdr;
 
     /* get LBA of first sector from partition table */
     addr = (uint8_t *)0x7dbe; /* 0x7c00 + 446 */
@@ -222,22 +223,28 @@ static int load_kernel(void) {
     cons_putchar(elf.e_ident[3]);
     cons_putchar('\n');
 
-    boot_ext2_pread(&fs, &ino, &prog_header, elf.e_phentsize, elf.e_phoff);
-    cons_puts("prog_header.p_type=");
-    cons_puthex(prog_header.p_type);
-    cons_putchar('\n');
-    cons_puts("prog_header.p_offset=");
-    cons_puthex(prog_header.p_offset);
-    cons_putchar('\n');
-    cons_puts("prog_header.p_vaddr=");
-    cons_puthex(prog_header.p_vaddr);
-    cons_putchar('\n');
-    cons_puts("prog_header.p_filesz=");
-    cons_puthex(prog_header.p_filesz);
-    cons_putchar('\n');
-    cons_puts("prog_header.p_memsz=");
-    cons_puthex(prog_header.p_memsz);
-    cons_putchar('\n');
+    for (i = 0; i < elf.e_phnum; i++) {
+        if (boot_ext2_pread(&fs, &ino, &phdr, elf.e_phentsize,
+                    elf.e_phoff) == -1)
+            return -1;
+        if (phdr.p_type != PT_LOAD)
+            continue;
+        loadsz = 0;
+        while (loadsz < phdr.p_filesz) {
+            sz = BUFSZ < phdr.p_filesz ? BUFSZ : phdr.p_filesz;
+            if (boot_ext2_pread(&fs, &ino, buf, sz, phdr.p_offset) == -1)
+                return -1;
+            memcpy(phdr.p_vaddr + loadsz, buf, sz);
+            loadsz += sz;
+        }
+    }
+
+    asm volatile (
+            "jmp %%eax\n\t"
+            :
+            :"a"(phdr.p_vaddr)
+            :
+            );
 
     return 0;
 }
