@@ -239,18 +239,12 @@ static int load_kernel(void) {
         }
     }
 
-    // TODO change the vaddr to the starting address
-    asm volatile (
-            "jmp %%eax\n\t"
-            :
-            :"a"(phdr.p_vaddr)
-            :
-            );
+    ((void(*)(void))elf.e_entry)();
 
     return 0;
 }
 
-void pm_main()
+void pm_main(void)
 {
     uint8_t id1, id2;
     struct ide_dev drv;
