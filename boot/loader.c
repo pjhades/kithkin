@@ -239,6 +239,7 @@ static int load_kernel(void) {
         }
     }
 
+    // TODO change the vaddr to the starting address
     asm volatile (
             "jmp %%eax\n\t"
             :
