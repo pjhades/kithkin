@@ -215,13 +215,13 @@ static int load_kernel(void) {
 
     cons_puts("Loading ELF...\n");
     boot_ext2_read(&fs, &ino, &elf, sizeof(struct Elf32_Ehdr));
-
-    cons_puthex(elf.e_ident[0]);
-    cons_putchar('\n');
-    cons_putchar(elf.e_ident[1]);
-    cons_putchar(elf.e_ident[2]);
-    cons_putchar(elf.e_ident[3]);
-    cons_putchar('\n');
+    if (elf.e_ident[EI_MAG0] != 0x7f
+            || elf.e_ident[EI_MAG1] != 'E'
+            || elf.e_ident[EI_MAG2] != 'L'
+            || elf.e_ident[EI_MAG3] != 'F') {
+        cons_puts("Bad ELF file\n");
+        return -1;
+    }
 
     for (i = 0; i < elf.e_phnum; i++) {
         if (boot_ext2_pread(&fs, &ino, &phdr, elf.e_phentsize,

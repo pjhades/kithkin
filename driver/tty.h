@@ -20,6 +20,6 @@ struct console {
 void cons_clear_screen(void);
 void cons_putchar(char ch);
 void cons_puts(const char *s);
-void cons_puthex(uint32_t hex);
+void cons_puthex(uint64_t hex);
 
 #endif

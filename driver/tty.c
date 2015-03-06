@@ -86,16 +86,16 @@ void cons_puts(const char *s)
         cons_putchar(*s);
 }
 
-void cons_puthex(uint32_t hex)
+void cons_puthex(uint64_t hex)
 {
     int i = 0, j = 2, count = 0;
     char *table = "0123456789abcdef", s[20], t[20] = "0x00";
-    uint32_t v32 = hex;
+    uint64_t v = hex;
 
-    while (v32) {
-        s[i++] = table[(v32 & 0xf0) >> 4];
-        s[i++] = table[v32 & 0x0f];
-        v32 >>= 8;
+    while (v) {
+        s[i++] = table[(v & 0xf0) >> 4];
+        s[i++] = table[v & 0x0f];
+        v >>= 8;
     }
     --i;
     while (i > 0) {
