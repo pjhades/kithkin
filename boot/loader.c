@@ -1,10 +1,10 @@
-#include <common.h>
 #include <elf.h>
-#include <arch/x86.h>
-#include <arch/mmu.h>
-#include <driver/ide.h>
-#include <driver/tty.h>
-#include <fs/ext2.h>
+#include <asm/x86.h>
+#include <kernel/types.h>
+#include <kernel/mmu.h>
+#include <kernel/ide.h>
+#include <kernel/console.h>
+#include <kernel/ext2.h>
 
 asm (".code16gcc\n");
 

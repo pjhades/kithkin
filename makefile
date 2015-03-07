@@ -1,4 +1,4 @@
-INC = -I. -I./include
+INC = -I./include
 
 .PHONY: fs kernel arch driver lib
 
@@ -21,7 +21,7 @@ bootldr: boot/loader.S boot/loader.c arch driver fs lib
 		boot/ldr_c.o \
 		arch/x86.o \
 		driver/ide.o \
-		driver/tty.o \
+		driver/console.o \
 		fs/ext2.o \
 		lib/lib.o \
 		-o boot/ldr.elf
@@ -35,7 +35,7 @@ arch:
 
 driver:
 	gcc $(INC) -ffreestanding -m32 -c driver/ide.c -o driver/ide.o
-	gcc $(INC) -ffreestanding -m32 -c driver/tty.c -o driver/tty.o
+	gcc $(INC) -ffreestanding -m32 -c driver/console.c -o driver/console.o
 
 kernel:
 	gcc $(INC) -ffreestanding -m32 -c kernel/entry.S -o kernel/kernel.o

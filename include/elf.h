@@ -1,7 +1,7 @@
 #ifndef __ELF_H__
 #define __ELF_H__
 
-#include <common.h>
+#include <kernel/types.h>
 
 typedef uint32_t Elf32_Addr;
 typedef uint16_t Elf32_Half;

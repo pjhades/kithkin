@@ -1,7 +1,7 @@
 #ifndef __STRING_H__
 #define __STRING_H__
 
-#include <common.h>
+#include <kernel/types.h>
 
 void *memcpy(void *dst, const void *src, size_t n);
 int strcmp(const char *s1, const char *s2);

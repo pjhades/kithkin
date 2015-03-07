@@ -1,7 +1,7 @@
 #ifndef __X86_H__
 #define __X86_H__
 
-#include <common.h>
+#include <kernel/types.h>
 
 inline uint8_t inb(uint16_t port);
 inline void outb(uint16_t port, uint8_t value);

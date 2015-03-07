@@ -1,8 +1,8 @@
-#include <common.h>
-#include <fs/ext2.h>
-#include <driver/ide.h>
-#include <driver/tty.h>
-#include <lib/string.h>
+#include <kernel/types.h>
+#include <kernel/ext2.h>
+#include <kernel/ide.h>
+#include <kernel/console.h>
+#include <string.h>
 
 static int ext2_read_block(struct ext2_fsinfo *fs, uint32_t blkid, uint8_t *block)
 {

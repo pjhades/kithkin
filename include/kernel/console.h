@@ -1,5 +1,5 @@
-#ifndef __TTY_H__
-#define __TTY_H__
+#ifndef __CONSOLE_H__
+#define __CONSOLE_H__
 
 #define VGA_CTRL      0x3d4
 #define VGA_DATA      0x3d5
