@@ -1,7 +1,10 @@
 #include <elf.h>
 #include <asm/x86.h>
+#include <asm/e820.h>
+#include <asm/mmu.h>
+#include <asm/loader.h>
 #include <kernel/types.h>
-#include <kernel/mmu.h>
+#include <kernel/mm.h>
 #include <kernel/ide.h>
 #include <kernel/console.h>
 #include <kernel/ext2.h>
@@ -92,19 +95,6 @@ inline static void die(void)
     while (1);
 }
 
-struct mem_e820_entry {
-    uint64_t base; 
-    uint64_t len;
-    uint32_t type;
-    uint32_t attr;
-};
-
-#define MEM_E820_MAX 128
-struct mem_e820 {
-    uint32_t n_regions;
-    struct mem_e820_entry regions[MEM_E820_MAX];
-} e820_map;
-
 static int detect_memory(void)
 {
     int size = sizeof(struct mem_e820_entry), error;
@@ -143,14 +133,9 @@ uint64_t boot_gdt[] = {
     [0] = SEG_DESC(0x0, 0x0, 0x0),
     /* 1: 32-bit read/executable code segment, 4k granularity, DPL 0 */
     [BOOT_GDT_ENTRY_CODE] = SEG_DESC(0x0, 0xfffff, 0xc09a),
-    /* 2: 32-bit read/write data segment, 4k granularity, DPL 0*/
+    /* 2: 32-bit read/write data segment, 4k granularity, DPL 0 */
     [BOOT_GDT_ENTRY_DATA] = SEG_DESC(0x0, 0xfffff, 0xc092),
 };
-
-struct gdt_ptr {
-    uint16_t len;
-    uint32_t ptr;
-} __attribute__((packed));
 
 struct gdt_ptr gdt;
 

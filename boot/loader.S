@@ -1,4 +1,4 @@
-#include <kernel/mmu.h>
+#include <asm/loader.h>
 
 .globl _start
 
@@ -35,7 +35,7 @@ print_string:
 jump_to_protected_mode:
     ljmp    $BOOT_CS, $pm_entry
 
-.equ stack, 0x07ffff
+.equ stack, LOADER_STACK
 
 .code32
 pm_entry:
