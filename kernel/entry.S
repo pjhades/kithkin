@@ -8,3 +8,7 @@ _start:
     movb $0x0c, %al
     movb %al, %ds:(0x0b8001)
     jmp .
+
+.data
+.globl page_directory
+page_directory:

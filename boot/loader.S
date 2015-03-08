@@ -1,4 +1,6 @@
-#include <asm/loader.h>
+#include <asm/mmu.h>
+
+#define BOOT_STACK 0x07ffff
 
 .globl _start
 
@@ -35,7 +37,7 @@ print_string:
 jump_to_protected_mode:
     ljmp    $BOOT_CS, $pm_entry
 
-.equ stack, LOADER_STACK
+.equ stack, BOOT_STACK
 
 .code32
 pm_entry:
