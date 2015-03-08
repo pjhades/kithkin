@@ -13,12 +13,14 @@ bootsec: boot/sector.S
 	as $< -o boot/sec.o
 	ld -Ttext=0x7c00 --oformat binary -nostdlib -static boot/sec.o -o boot/sec.bin
 
-bootldr: boot/loader.S boot/loader.c arch driver fs lib
+bootldr: boot/loader.S boot/loader.c boot/loader16bit.c arch driver fs lib
 	gcc $(INC) -ffreestanding -m32 -c boot/loader.S -o boot/ldr_asm.o
 	gcc $(INC) -ffreestanding -m32 -c boot/loader.c -o boot/ldr_c.o
+	gcc $(INC) -ffreestanding -m32 -c boot/loader16bit.c -o boot/ldr_c16.o
 	ld -T boot/loader.ld -m elf_i386 \
 		boot/ldr_asm.o \
 		boot/ldr_c.o \
+		boot/ldr_c16.o \
 		arch/x86.o \
 		driver/ide.o \
 		driver/console.o \

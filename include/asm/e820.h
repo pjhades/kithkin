@@ -1,6 +1,8 @@
 #ifndef __E820_H__
 #define __E820_H__
 
+#include <kernel/types.h>
+
 struct mem_e820_entry {
     uint64_t base; 
     uint64_t len;
