@@ -6,7 +6,7 @@
 #define KERNEL_VM_START 0xc0000000
 #define PGDIR_SHIFT     22
 #define N_PDE           1024
-#define N_PTE           1024
+#define N_PTE_PER_PDE   1024
 #define N_USER_PDE      (KERNEL_VM_START >> PGDIR_SHIFT)
 #define N_KERNEL_PDE    (N_PDE - N_USER_PDE)
 

@@ -11,7 +11,7 @@ struct console vga;
 static int load_kernel(void) {
     int i, ret, sz, loadsz;
     uint8_t *addr, buf[BUFSZ];
-    uint32_t phdr_off;//, seg_off;
+    uint32_t phdr_off;
     struct ext2_fsinfo fs;
     struct ext2_inode ino;
     struct Elf32_Ehdr elf;
