@@ -11,7 +11,7 @@ struct console vga;
 static int load_kernel(void) {
     int i, ret, sz, loadsz;
     uint8_t *addr, buf[BUFSZ];
-    uint32_t offset;
+    uint32_t phdr_off;//, seg_off;
     struct ext2_fsinfo fs;
     struct ext2_inode ino;
     struct Elf32_Ehdr elf;
@@ -42,21 +42,23 @@ static int load_kernel(void) {
         return -1;
     }
 
-    offset = elf.e_phoff;
+    phdr_off = elf.e_phoff;
     for (i = 0; i < elf.e_phnum; i++) {
-        if (boot_ext2_pread(&fs, &ino, &phdr, elf.e_phentsize, offset) == -1)
+        if (boot_ext2_pread(&fs, &ino, &phdr, elf.e_phentsize, phdr_off) == -1)
             return -1;
         if (phdr.p_type != PT_LOAD)
             continue;
+
         loadsz = 0;
         while (loadsz < phdr.p_filesz) {
-            sz = BUFSZ < phdr.p_filesz ? BUFSZ : phdr.p_filesz;
-            if (boot_ext2_pread(&fs, &ino, buf, sz, phdr.p_offset) == -1)
+            sz = BUFSZ < (phdr.p_filesz - loadsz) ?
+                 BUFSZ : (phdr.p_filesz - loadsz);
+            if (boot_ext2_pread(&fs, &ino, buf, sz, phdr.p_offset + loadsz) == -1)
                 return -1;
             memcpy(phdr.p_vaddr + loadsz, buf, sz);
             loadsz += sz;
         }
-        offset += elf.e_phentsize;
+        phdr_off += elf.e_phentsize;
     }
 
     ((void(*)(void))elf.e_entry)();
