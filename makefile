@@ -1,12 +1,13 @@
 INC = -I./include
+CFLAGS = -ffreestanding -m32 -c
 
 .PHONY: fs arch driver lib
 
 image: bootsec bootldr
 	dd conv=notrunc if=boot/sec.bin of=disk.img bs=446 count=1
 	dd conv=notrunc skip=510 seek=510 if=boot/sec.bin of=disk.img bs=1 count=2
-	dd conv=notrunc seek=1 if=boot/ldr.bin of=disk.img bs=512 \
-		count=$$(( ($$(stat --format '%s' boot/ldr.bin) + 511)/ 512 ))
+	dd conv=notrunc seek=1 if=boot/loadr.bin of=disk.img bs=512 \
+		count=$$(( ($$(stat --format '%s' boot/loadr.bin) + 511)/ 512 ))
 	sudo cp disk.img /media/sf_pjhades/code/lab
 
 bootsec: boot/sector.S
@@ -14,34 +15,34 @@ bootsec: boot/sector.S
 	ld -Ttext=0x7c00 --oformat binary -nostdlib -static boot/sec.o -o boot/sec.bin
 
 bootldr: boot/loader.S boot/loader.c boot/loader16bit.c arch driver fs lib
-	gcc $(INC) -ffreestanding -m32 -c boot/loader.S -o boot/ldr_asm.o
-	gcc $(INC) -ffreestanding -m32 -c boot/loader.c -o boot/ldr_c.o
-	gcc $(INC) -ffreestanding -m32 -c boot/loader16bit.c -o boot/ldr_c16.o
+	gcc $(INC) $(CFLAGS) boot/loader.S -o boot/loadr_asm.o
+	gcc $(INC) $(CFLAGS) boot/loader.c -o boot/loadr_c.o
+	gcc $(INC) $(CFLAGS) boot/loader16bit.c -o boot/loadr_c16.o
 	ld -T boot/loader.ld -m elf_i386 \
-		boot/ldr_asm.o \
-		boot/ldr_c.o \
-		boot/ldr_c16.o \
+		boot/loadr_asm.o \
+		boot/loadr_c.o \
+		boot/loadr_c16.o \
 		arch/x86.o \
 		driver/ide.o \
 		driver/console.o \
 		fs/ext2.o \
 		lib/lib.o \
-		-o boot/ldr.elf
-	objcopy -j .text -j .rodata -j .bss -j .data -O binary boot/ldr.elf boot/ldr.bin
+		-o boot/loadr.elf
+	objcopy -j .text -j .rodata -j .bss -j .data -O binary boot/loadr.elf boot/loadr.bin
 
 fs:
-	gcc $(INC) -ffreestanding -m32 -c fs/*.c -o fs/ext2.o
+	gcc $(INC) $(CFLAGS) fs/*.c -o fs/ext2.o
 
 arch:
-	gcc $(INC) -ffreestanding -m32 -c arch/x86.c -o arch/x86.o
+	gcc $(INC) $(CFLAGS) arch/x86.c -o arch/x86.o
 
 driver:
-	gcc $(INC) -ffreestanding -m32 -c driver/ide.c -o driver/ide.o
-	gcc $(INC) -ffreestanding -m32 -c driver/console.c -o driver/console.o
+	gcc $(INC) $(CFLAGS) driver/ide.c -o driver/ide.o
+	gcc $(INC) $(CFLAGS) driver/console.c -o driver/console.o
 
 kernel: arch driver fs lib
-	gcc $(INC) -ffreestanding -m32 -c kernel/entry.S -o kernel/kernel.o
-	gcc $(INC) -ffreestanding -m32 -c kernel/main.c -o kernel/main.o
+	gcc $(INC) $(CFLAGS) kernel/entry.S -o kernel/kernel.o
+	gcc $(INC) $(CFLAGS) kernel/main.c -o kernel/main.o
 	ld -T kernel/kernel.ld -m elf_i386 \
 		kernel/kernel.o \
 		kernel/main.o \
@@ -55,10 +56,10 @@ kernel: arch driver fs lib
 	sudo losetup -d /dev/loop0
 
 lib:
-	gcc $(INC) -ffreestanding -m32 -c lib/*.c -o lib/lib.o
+	gcc $(INC) $(CFLAGS) lib/*.c -o lib/lib.o
 
 .PHONY: clean
 clean:
 	rm -f boot/*.{o,bin,elf}
 	rm -f arch/*.o
-	rm -f kernel/*.o
+	rm -f kernel/*.{o,img}
