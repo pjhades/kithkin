@@ -54,7 +54,7 @@ void cons_clear_screen(void)
     vga.c_col = 0;
     for (i = 0; i < VGA_ROWS; i++)
         for (j = 0; j < VGA_COLS; j++)
-            video[i][j] = 0x0e<<8;
+            video[i][j] = 0x07<<8;
 }
 
 void cons_putchar(char ch)
@@ -74,7 +74,7 @@ void cons_putchar(char ch)
             cons_set_cursor();
             break;
         default:
-            video[vga.c_row][vga.c_col] = (0x0e << 8) | ch;
+            video[vga.c_row][vga.c_col] = (0x07 << 8) | ch;
             cons_add_col();
             break;
     }
