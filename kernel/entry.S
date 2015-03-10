@@ -3,7 +3,7 @@
 .code32
 
 .globl _start
-.text
+.section .text.entry
 _start:
     /* fill the two page directory to map first 8MB memory */
     movl $pgdir0, %edi
@@ -17,6 +17,16 @@ _start:
     dec %ecx
     jmp 1b
 2:
+    movl $page_directory, %eax
+    movl %eax, %cr3
+    movl %cr0, %eax
+    orl  $0x80000000, %eax
+    movl %eax, %cr0
+    jmp 3f
+3:
+    movl $kernel_main, %eax
+    jmp *%eax
+
     movb $0x30, %al
     movb %al, %ds:(0x0b8000)
     movb $0x0c, %al
@@ -43,3 +53,7 @@ pgdir0:
 .org 0x3000
 .globl pgdir1
 pgdir1:
+
+.org 0x4000
+.globl startup_data
+startup_data:

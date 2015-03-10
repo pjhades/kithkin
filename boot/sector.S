@@ -65,9 +65,9 @@ _start:
 
     movb $0x02, %ah
     movb $0x20, %al /* number of sectors to read */
-    xorb %ch, %ch /* track low 8 bits */
+    xorb %ch, %ch   /* track low 8 bits */
     movb $0x02, %cl /* sector, track high 2 bits */
-    xorb %dh, %dh /* head */
+    xorb %dh, %dh   /* head */
     movb $0x80, %dl /* drive */
     movw $bootloader, %bx /* buffer */
     int $0x13
@@ -95,7 +95,7 @@ print_string:
     pushw %bp 
 
     movb $0x03, %ah /* get cursor position */
-    xorb %bh, %bh /* page */
+    xorb %bh, %bh   /* page */
     int $0x10
 
     movw 0x08(%esp), %cx /* arg: length */
@@ -103,7 +103,7 @@ print_string:
 
     movb $0x13, %ah
     movb $0x01, %al /* string contains no attributes, update cursor */
-    xorb %bh, %bh /* page */
+    xorb %bh, %bh   /* page */
     movb $0x07, %bl /* attribute */
     int $0x10
 

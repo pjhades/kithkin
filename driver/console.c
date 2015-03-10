@@ -2,7 +2,7 @@
 #include <kernel/types.h>
 #include <kernel/console.h>
 
-extern struct console vga;
+struct console vga;
 
 static void cons_set_cursor(void)
 {

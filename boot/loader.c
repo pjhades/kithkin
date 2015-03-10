@@ -1,17 +1,16 @@
 #include <elf.h>
-#include <kernel/types.h>
 #include <kernel/ide.h>
 #include <kernel/console.h>
+#include <kernel/types.h>
 #include <kernel/ext2.h>
-
-struct console vga;
+#include <kernel/mm.h>
 
 #define BUFSZ 1024
 
 static int load_kernel(void) {
     int i, ret, sz, loadsz;
     uint8_t *addr, buf[BUFSZ];
-    uint32_t phdr_off;
+    uint32_t phdr_off, phyaddr;
     struct ext2_fsinfo fs;
     struct ext2_inode ino;
     struct Elf32_Ehdr elf;
@@ -49,15 +48,25 @@ static int load_kernel(void) {
         if (phdr.p_type != PT_LOAD)
             continue;
 
+        phyaddr = phdr.p_vaddr >= KERNEL_VM_START ?
+            phdr.p_vaddr - KERNEL_VM_START : phdr.p_vaddr;
         loadsz = 0;
+
         while (loadsz < phdr.p_filesz) {
             sz = BUFSZ < (phdr.p_filesz - loadsz) ?
                  BUFSZ : (phdr.p_filesz - loadsz);
+
             if (boot_ext2_pread(&fs, &ino, buf, sz, phdr.p_offset + loadsz) == -1)
                 return -1;
-            memcpy(phdr.p_vaddr + loadsz, buf, sz);
+
+            memcpy(phyaddr + loadsz, buf, sz);
+
             loadsz += sz;
         }
+
+        if (loadsz < phdr.p_memsz)
+            memset(phyaddr + loadsz, 0, phdr.p_memsz - loadsz);
+
         phdr_off += elf.e_phentsize;
     }
 

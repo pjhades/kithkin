@@ -1,6 +1,6 @@
 INC = -I./include
 
-.PHONY: fs kernel arch driver lib
+.PHONY: fs arch driver lib
 
 image: bootsec bootldr
 	dd conv=notrunc if=boot/sec.bin of=disk.img bs=446 count=1
@@ -39,9 +39,15 @@ driver:
 	gcc $(INC) -ffreestanding -m32 -c driver/ide.c -o driver/ide.o
 	gcc $(INC) -ffreestanding -m32 -c driver/console.c -o driver/console.o
 
-kernel:
+kernel: arch driver fs lib
 	gcc $(INC) -ffreestanding -m32 -c kernel/entry.S -o kernel/kernel.o
-	ld -T kernel/kernel.ld -m elf_i386 kernel/kernel.o -o kernel/kernel.img
+	gcc $(INC) -ffreestanding -m32 -c kernel/main.c -o kernel/main.o
+	ld -T kernel/kernel.ld -m elf_i386 \
+		kernel/kernel.o \
+		kernel/main.o \
+		arch/x86.o \
+		driver/console.o \
+		-o kernel/kernel.img
 	sudo losetup -o $$((512*2048)) /dev/loop0 disk.img
 	sudo mount /dev/loop0 /mnt/test
 	sudo cp kernel/kernel.img /mnt/test/boot/kernel.img
