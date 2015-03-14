@@ -66,7 +66,7 @@ static int ext2_search_dir_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
     uint8_t block[4096], *p;
     uint32_t *blkids, n_blkid, blksz;
     struct ext2_direntry *entry;
-    
+
     blksz = 1024 << fs->sb.sb_log_block_size;
     n_blkid = blksz >> 2;
 
