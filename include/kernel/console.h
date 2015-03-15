@@ -1,6 +1,8 @@
 #ifndef __CONSOLE_H__
 #define __CONSOLE_H__
 
+#include <kernel/types.h>
+
 #define VGA_CTRL      0x3d4
 #define VGA_DATA      0x3d5
 #define VGA_CURSOR_HI 0xe
