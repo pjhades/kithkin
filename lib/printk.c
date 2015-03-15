@@ -1,264 +1,148 @@
 #include <kernel/console.h>
 #include <stdarg.h>
 
+#define isdigit(x) ((x) >= '0' && (x) <= '9')
+
+static int __num(char *buf, unsigned int num, int base)
+{
+    int digits = 0;
+    char *hex = "0123456789abcdef";
+
+    if (num == 0) {
+        buf[0] = '0';
+        return 1;
+    }
+    while (num > 0) {
+        buf[digits++] = hex[num % base];
+        num /= base;
+    }
+    return digits;
+}
+
+static int __str(char *buf, char *argstr, int precision)
+{
+    int len, i;
+    char *p;
+
+    for (len = 0, p = argstr; *p && (precision == 0 || len < precision); p++)
+        len++;
+    for (i = len; i > 0; i--)
+        buf[len - i] = argstr[i - 1];
+    return len;
+}
+
 int vsprintk(char *str, const char *fmt, va_list va)
 {
-    unsigned int arg_u;
-    int i, j, width, precision, count, arg_i;
-    char prefix, conversion, *arg_s, *hex = "0123456789abcdef",
-         conv[26] = {
-             ['d' - 'a'] = 1,
-             ['p' - 'a'] = 1,
-             ['s' - 'a'] = 1,
-             ['x' - 'a'] = 1,
-         };
-    enum {
-        s_normal,
-        s_start,
-        s_width_prefix,
-        s_width_digit,
-        s_dot,
-        s_precision,
-        s_print,
-    } state;
+    int digits, bytes, width, precision, argint,
+        pad_precision, pad_width, len;
+    unsigned int arguint;
+    char *argstr, width_prefix, negative, temp[1024];
+    const char *p;
 
-    for (i = 0, j = 0, state = s_normal, count = 0; fmt[i] != '\0'; ) {
-        if (state == s_normal) {
-            if (fmt[i] != '%') {
-                str[j++] = fmt[i];
-                count++;
-            }
-            else {
-                state = s_start;
-                width = 0;
-                precision = 0;
-                prefix = '+';
-            }
-            i++;
+    for (bytes = 0; *fmt; ) {
+        if (*fmt != '%') {
+            str[bytes++] = *fmt;
+            ++fmt;
             continue;
         }
 
-        switch (state) {
-            case s_start:
-                if (fmt[i] == '+' || fmt[i] == '-' || fmt[i] == '0') {
-                    prefix = fmt[i];
-                    state = s_width_prefix;
+        width = precision = negative = 0;
+        width_prefix = '+';
+        p = fmt + 1;
+        if (!*p)
+            return bytes;
+        if (*p == '%') {
+            str[bytes++] = '%';
+            continue;
+        }
+        /* width */
+        if (*p == '+' || *p == '-' || *p == '0') {
+            width_prefix = *p;
+            ++p;
+        }
+        for (; *p && *p != '.' && isdigit(*p); p++)
+            width = width * 10 + (*p - '0');
+        if (!*p)
+            return bytes;
+        /* precision */
+        if (*p == '.') {
+            ++p;
+            for (; *p && isdigit(*p); p++)
+                precision = precision * 10 + (*p - '0');
+            if (!*p)
+                return bytes;
+        }
+        /* conversion */
+        switch (*p) {
+            case 'd':
+                argint = va_arg(va, int);
+                if (argint < 0) {
+                    negative = 1;
+                    argint = -argint;
                 }
-                else if (fmt[i] >= '1' && fmt[i] <= '9') {
-                    width = width * 10 + (fmt[i] - '0');
-                    state = s_width_digit;
-                }
-                else if (fmt[i] == '.')
-                    state = s_dot;
-                else if (fmt[i] == '%') {
-                    conversion = '%';
-                    state = s_print;
-                }
-                else if (conv[fmt[i] - 'a']) {
-                    conversion = fmt[i];
-                    state = s_print;
-                }
-                else
-                    goto error;
+                digits = __num(temp, (unsigned int)argint, 10);
+                goto set_length;
+            case 'p':
+                negative = 2;
+            case 'x':
+                arguint = va_arg(va, unsigned int);
+                digits = __num(temp, arguint, 16);
+set_length:
+                pad_precision = precision > digits ? precision - digits : 0;
+                len = (precision > digits ? precision : digits) + negative;
                 break;
-
-            case s_width_prefix:
-                if (fmt[i] >= '1' && fmt[i] <= '9') {
-                    width = width * 10 + (fmt[i] - '0');
-                    state = s_width_digit;
-                }
-                else
-                    goto error;
+            case 's':
+                argstr = va_arg(va, char *);
+                digits = __str(temp, argstr, precision);
+                pad_precision = 0;
+                len = digits;
                 break;
-
-            case s_width_digit:
-                if (fmt[i] >= '0' && fmt[i] <= '9') {
-                    width = width * 10 + (fmt[i] - '0');
-                    state = s_width_digit;
-                }
-                else if (fmt[i] == '.')
-                    state = s_dot;
-                else if (conv[fmt[i] - 'a']) {
-                    conversion = fmt[i];
-                    state = s_print;
-                }
-                else
-                    goto error;
-                break;
-
-            case s_dot:
-                if (fmt[i] >= '0' && fmt[i] <= '9') {
-                    precision = precision * 10 + (fmt[i] - '0');
-                    state = s_precision;
-                }
-                else if (conv[fmt[i] - 'a']) {
-                    conversion = fmt[i];
-                    state = s_print;
-                }
-                else
-                    goto error;
-                break;
-
-            case s_precision:
-                if (fmt[i] >= '0' && fmt[i] <= '9') {
-                    precision = precision * 10 + (fmt[i] - '0');
-                    state = s_precision;
-                }
-                else if (conv[fmt[i] - 'a']) {
-                    conversion = fmt[i];
-                    state = s_print;
-                }
-                else
-                    goto error;
-                break;
+            default:
+                fmt = p + 1;
+                continue;
         }
 
-        if (state == s_print) {
-            char tmp[32];
-            int k = 0, idx, pad_precision = 0, pad_width = 0, len, negative = 0;
+#define PRINT_ARG                                   \
+    do {                                            \
+        if (negative == 1)                          \
+            str[bytes++] = '-';                     \
+        else if (negative == 2) {                   \
+            str[bytes++] = '0'; str[bytes++] = 'x'; \
+        }                                           \
+        for (; pad_precision > 0; pad_precision--)  \
+            str[bytes++] = '0';                     \
+        for (--digits; digits >= 0; digits--)       \
+            str[bytes++] = temp[digits];            \
+    } while (0)
 
-            if (conversion == 'p') {
-                arg_u = va_arg(va, unsigned int);
-                str[j++] = '0';
-                str[j++] = 'x';
-                count += 2;
-                if (arg_u == 0) {
-                    str[j++] = '0';
-                    count++;
-                }
-                else {
-                    for (k = 0; arg_u > 0; ) {
-                        tmp[k++] = hex[arg_u % 0x10];
-                        arg_u /= 0x10;
-                    }
-                    for (--k; k >= 0; k--) {
-                        str[j++] = tmp[k];
-                        count++;
-                    }
-                }
-            }
-            else if (conversion == 'x' || conversion == 'd') {
-                if (conversion == 'x') {
-                    arg_u = va_arg(va, unsigned int);
-                    if (arg_u == 0)
-                        tmp[k++] = '0';
-                    else {
-                        for (k = 0; arg_u > 0; ) {
-                            tmp[k++] = hex[arg_u % 0x10];
-                            arg_u /= 0x10;
-                        }
-                    }
-                } else {
-                    arg_i = va_arg(va, int);
-                    if (arg_i < 0) {
-                        negative = 1;
-                        arg_i = -arg_i;
-                    }
-                    if (arg_i == 0) {
-                        tmp[k++] = '0';
-                        len = k;
-                    }
-                    else {
-                        for (k = 0; arg_i > 0; ) {
-                            tmp[k++] = hex[arg_i % 10];
-                            arg_i /= 10;
-                        }
-                    }
-                }
+#define PRINT_PAD                                           \
+    do {                                                    \
+        for (; pad_width > 0; pad_width--)                  \
+            str[bytes++] = width_prefix == '0' ? '0' : ' '; \
+    } while (0)
 
-                pad_precision = precision > k ? precision - k : 0;
-                len = pad_precision > 0 ? precision : k;
-                len = negative ? len + 1 : len;
-                pad_width = width > len ? width - len : 0;
+        pad_width = width > len ? width - len : 0;
+        if (width_prefix == '-')
+            PRINT_ARG;
+        PRINT_PAD;
+        if (width_prefix != '-')
+            PRINT_ARG;
+        str[bytes] = '\0';
 
-                if (prefix == '-') {
-                    if (negative) {
-                        str[j++] = '-';
-                        count++;
-                    }
-                    for (idx = 0; idx < pad_precision; idx++) {
-                        str[j++] = '0';
-                        count++;
-                    }
-                    for (--k; k >= 0; k--) {
-                        str[j++] = tmp[k];
-                        count++;
-                    }
-                    for (idx = 0; idx < pad_width; idx++) {
-                        str[j++] = ' ';
-                        count++;
-                    }
-                } else {
-                    for (idx = 0; idx < pad_width; idx++) {
-                        str[j++] = prefix == '+' || negative ? ' ' : '0';
-                        count++;
-                    }
-                    if (negative) {
-                        str[j++] = '-';
-                        count++;
-                    }
-                    for (idx = 0; idx < pad_precision; idx++) {
-                        str[j++] = '0';
-                        count++;
-                    }
-                    for (--k; k >= 0; k--) {
-                        str[j++] = tmp[k];
-                        count++;
-                    }
-                }
-            }
-            else if (conversion == '%') {
-                str[j++] = '%';
-                count++;
-            }
-            else {
-                arg_s = va_arg(va, char *);
-                for (k = 0; *arg_s && (precision == 0 || k < precision); )
-                    tmp[k++] = *arg_s++;
-                pad_width = width > k ? width - k : 0;
-                if (prefix == '-') {
-                    for (idx = 0; idx < k; idx++) {
-                        str[j++] = tmp[idx];
-                        count++;
-                    }
-                    for (idx = 0; idx < pad_width; idx++) {
-                        str[j++] = ' ';
-                        count++;
-                    }
-                } else {
-                    for (idx = 0; idx < pad_width; idx++) {
-                        str[j++] = ' ';
-                        count++;
-                    }
-                    for (idx = 0; idx < k; idx++) {
-                        str[j++] = tmp[idx];
-                        count++;
-                    }
-                }
-            }
-
-            state = s_normal;
-        }
-
-        i++;
+        fmt = p + 1;
     }
-    str[j] = '\0';
-    return count;
-
-error:
-    return -1;
+    return bytes;
 }
 
 int printk(const char *fmt, ...)
 {
-    char tmp[1024];
+    char temp[1024];
     int count;
     va_list va;
 
     va_start(va, fmt);
-    count = vsprintk(tmp, fmt, va);
+    count = vsprintk(temp, fmt, va);
     va_end(va);
-    if (count != -1)
-        cons_puts(tmp);
+    cons_puts(temp);
     return count;
 }
