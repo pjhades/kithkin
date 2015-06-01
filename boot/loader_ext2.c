@@ -195,7 +195,8 @@ static int ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
     i = help->index[level];
     help->index[level] = 0;
     for (; i < n_blkid; i++) {
-        ext2_read_indirect(fs, blkids[i], level - 1, help);
+        if (ext2_read_indirect(fs, blkids[i], level - 1, help) < 0)
+            return -1;
         if (help->count >= help->total)
             return 0;
     }
