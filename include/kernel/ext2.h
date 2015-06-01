@@ -102,8 +102,8 @@ struct ext2_fsinfo {
  */
 struct ext2_fshelp {
     void *buf;
-    size_t count; /* number of bytes to read */
-    size_t total; /* number of bytes we've read */
+    size_t total; /* number of bytes to read */
+    size_t count; /* number of bytes we've read */
     int index[4]; /* start offset in each level of indirect block */
 };
 

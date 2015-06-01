@@ -180,11 +180,11 @@ static int ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
     if (level <= 0) {
         if (ext2_read_block(fs, blkid, block) < 0)
             return -1;
-        sz = blksz - help->index[0] < help->count - help->total ?
-             blksz - help->index[0] : help->count - help->total;
+        sz = blksz - help->index[0] < help->total - help->count ?
+             blksz - help->index[0] : help->total - help->count;
         memcpy(help->buf, block + help->index[0], sz);
         help->index[0] = 0;
-        help->total += sz;
+        help->count += sz;
         help->buf += sz;
         return 0;
     }
@@ -196,43 +196,43 @@ static int ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
     help->index[level] = 0;
     for (; i < n_blkid; i++) {
         ext2_read_indirect(fs, blkids[i], level - 1, help);
-        if (help->total >= help->count)
+        if (help->count >= help->total)
             return 0;
     }
     return 0;
 }
 
 /*
- * Read @count bytes from @inode, starting from the very beginning
+ * Read @total bytes from @inode, starting from the very beginning
  * of the file. Put all read data in @buf. Return the bytes read.
  */
 ssize_t boot_ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
-        size_t count)
+        size_t total)
 {
     int i, level;
-    struct ext2_fshelp help = {buf, count, 0};
+    struct ext2_fshelp help = {buf, total, 0};
 
     for (i = 0; i < EXT2_N_BLK_PTRS; i++) {
         level = i < EXT2_N_DIRECT_BLK_PTR ? 0 : i - EXT2_N_DIRECT_BLK_PTR + 1;
         if (ext2_read_indirect(fs, inode->i_blocks[i], level, &help) == -1)
             return -1;
-        if (help.total >= count)
-            return count;
+        if (help.count >= total)
+            return total;
     }
-    return help.total;
+    return help.count;
 }
 
 /*
- * Read @count bytes from @inode, starting from byte @offset.
+ * Read @total bytes from @inode, starting from byte @offset.
  * Put all read data in @buf. Return the bytes read.
  */
 ssize_t boot_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
-        size_t count, off_t offset)
+        size_t total, off_t offset)
 {
     int i, off, level;
-    size_t total = 0, n;
+    size_t count = 0, n;
     uint32_t blksz, n_blkid;
-    struct ext2_fshelp help = {buf, count, 0};
+    struct ext2_fshelp help = {buf, total, 0};
 
     blksz = 1024 << fs->sb.sb_log_block_size;
     n_blkid = blksz >> 2;
@@ -242,10 +242,10 @@ ssize_t boot_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *
             help.index[0] = offset % blksz;
             level = i < EXT2_N_DIRECT_BLK_PTR ? 0 : i - EXT2_N_DIRECT_BLK_PTR + 1;
             ext2_read_indirect(fs, inode->i_blocks[i], level, &help);
-            if (help.total >= count)
-                return count;
+            if (help.count >= total)
+                return total;
         }
-        return help.total;
+        return help.count;
     }
 
     offset -= EXT2_N_DIRECT_BLK_PTR * blksz;
@@ -275,8 +275,8 @@ indirect:
     for (; i < EXT2_N_BLK_PTRS; i++) {
         ext2_read_indirect(fs, inode->i_blocks[i],
                 i - EXT2_N_DIRECT_BLK_PTR + 1, &help);
-        if (help.total >= count)
-            return count;
+        if (help.count >= total)
+            return total;
     }
-    return help.total;
+    return help.count;
 }
