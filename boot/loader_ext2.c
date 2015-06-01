@@ -11,7 +11,7 @@ static int ext2_read_block(struct ext2_fsinfo *fs, uint32_t blkid, uint8_t *bloc
 
     blksz = 1024 << fs->sb.sb_log_block_size;
     offset = fs->disk_start + blkid * blksz;
-    return ide_read(PTR2LBA(offset), blksz >> 9, block);
+    return ide_read(off_to_lba(offset), blksz >> 9, block);
 }
 
 /*
@@ -34,7 +34,7 @@ static int ext2_find_inode(struct ext2_fsinfo *fs, uint32_t id,
     blkid = grpid / (blksz / sizeof(struct ext2_block_group_desc));
 
     if (ext2_read_block(fs, fs->sb.sb_first_data_block + blkid + 1,
-                block))
+                block) < 0)
         return -1;
 
     desc_table = (struct ext2_block_group_desc *)block;
@@ -45,7 +45,7 @@ static int ext2_find_inode(struct ext2_fsinfo *fs, uint32_t id,
     inode_idx = (id - 1) % fs->sb.sb_n_inodes_per_blkgrp;
     blkid = (inode_idx * fs->sb.sb_inode_size) / blksz;
 
-    if (ext2_read_block(fs, desc.bg_inode_table + blkid, block))
+    if (ext2_read_block(fs, desc.bg_inode_table + blkid, block) < 0)
         return -1;
 
     inodes = (struct ext2_inode *)block;
@@ -70,7 +70,7 @@ static int ext2_search_dir_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
     blksz = 1024 << fs->sb.sb_log_block_size;
     n_blkid = blksz >> 2;
 
-    if (ext2_read_block(fs, blkid, block))
+    if (ext2_read_block(fs, blkid, block) < 0)
         return -1;
 
     if (level <= 0) {
@@ -160,7 +160,7 @@ int boot_ext2_find_file(struct ext2_fsinfo *fs, const char *path,
 
 int boot_ext2_get_fsinfo(struct ext2_fsinfo *fs)
 {
-    if (ide_read(PTR2LBA(fs->disk_start + 1024), 2, (uint8_t *)&fs->sb))
+    if (ide_read(off_to_lba(fs->disk_start + 1024), 2, (uint8_t *)&fs->sb))
         return -1;
     if (ext2_find_inode(fs, EXT2_ROOT_INODE, &fs->root_inode))
         return -1;
@@ -178,7 +178,7 @@ static int ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
     n_blkid = blksz >> 2;
 
     if (level <= 0) {
-        if (ext2_read_block(fs, blkid, block))
+        if (ext2_read_block(fs, blkid, block) < 0)
             return -1;
         sz = blksz - help->index[0] < help->count - help->total ?
              blksz - help->index[0] : help->count - help->total;
@@ -189,7 +189,7 @@ static int ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
         return 0;
     }
 
-    if (ext2_read_block(fs, blkid, block))
+    if (ext2_read_block(fs, blkid, block) < 0)
         return -1;
     blkids = (uint32_t *)block;
     i = help->index[level];

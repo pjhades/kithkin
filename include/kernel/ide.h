@@ -48,7 +48,11 @@
 #define IDE_CMD_PIO_WRITE   0x30
 #define IDE_CMD_CACHE_FLUSH 0xe7
 
-#define PTR2LBA(ptr) ((ptr) >> 9)
+#define off_to_lba(ptr) ((ptr) >> 9)
+
+/* return value */
+#define IDE_POLL_ERROR     -1
+#define IDE_POLL_DISKFAULT -2
 
 /* Ignore most of the fields */
 struct ide_identity {

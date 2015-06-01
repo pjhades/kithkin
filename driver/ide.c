@@ -23,9 +23,9 @@ static int ide_poll(void)
         ;
     value = inb(IDE_PRI_STAT);
     if (value & IDE_STAT_ERR) /* error */
-        return -1;
+        return IDE_POLL_ERROR;
     if (value & IDE_STAT_DF) /* disk fault */
-        return -2;
+        return IDE_POLL_DISKFAULT;
     return 0;
 }
 
