@@ -7,6 +7,7 @@
 asm (".code16gcc\n");
 
 void print_string(char *s, int len);
+void jump_to_protected_mode(void);
 
 inline static int check_a20(void)
 {

@@ -1,3 +1,4 @@
+#include <string.h>
 #include <elf.h>
 #include <kernel/ide.h>
 #include <kernel/console.h>
@@ -59,13 +60,13 @@ static int load_kernel(void) {
             if (boot_ext2_pread(&fs, &ino, buf, sz, phdr.p_offset + loadsz) == -1)
                 return -1;
 
-            memcpy(phyaddr + loadsz, buf, sz);
+            memcpy((char *)(phyaddr + loadsz), buf, sz);
 
             loadsz += sz;
         }
 
         if (loadsz < phdr.p_memsz)
-            memset(phyaddr + loadsz, 0, phdr.p_memsz - loadsz);
+            memset((char *)(phyaddr + loadsz), 0, phdr.p_memsz - loadsz);
 
         phdr_off += elf.e_phentsize;
     }
@@ -77,7 +78,6 @@ static int load_kernel(void) {
 
 void pm_main(void)
 {
-    uint8_t id1, id2;
     struct ide_dev drv;
 
     cons_clear_screen();

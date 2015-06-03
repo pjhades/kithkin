@@ -88,7 +88,7 @@ void cons_puts(const char *s)
 
 void cons_puthex(uint64_t hex)
 {
-    int i = 0, j = 2, count = 0;
+    int i = 0, j = 2;
     char *table = "0123456789abcdef", s[20], t[20] = "0x00";
     uint64_t v = hex;
 

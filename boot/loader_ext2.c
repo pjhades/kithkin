@@ -22,14 +22,12 @@ static int ext2_find_inode(struct ext2_fsinfo *fs, uint32_t id,
 {
     int i;
     uint8_t block[4096];
-    uint32_t n_grps, grpid, blksz, blkid, inode_idx;
+    uint32_t grpid, blksz, blkid, inode_idx;
     struct ext2_block_group_desc *desc_table, desc;
     struct ext2_inode *inodes;
 
     /* Find the group descriptor table */
     blksz = 1024 << fs->sb.sb_log_block_size;
-    n_grps = (fs->sb.sb_n_blocks + fs->sb.sb_n_blocks_per_blkgrp - 1)
-        / fs->sb.sb_n_blocks_per_blkgrp;
     grpid = (id - 1) / fs->sb.sb_n_inodes_per_blkgrp;
     blkid = grpid / (blksz / sizeof(struct ext2_block_group_desc));
 
@@ -107,9 +105,6 @@ static int ext2_search_dir(struct ext2_fsinfo *fs, struct ext2_inode *dir,
         const char *name, struct ext2_inode *inode)
 {
     int i, found, level;
-    uint8_t block[4096], *p;
-    uint32_t blksz = 1024 << fs->sb.sb_log_block_size;
-    struct ext2_direntry *entry;
 
     if (!(dir->i_mode & EXT2_TYPE_DIR)) {
         cons_puts("Current inode is not a directory\n");
@@ -230,8 +225,7 @@ ssize_t boot_ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *b
 ssize_t boot_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
         size_t total, off_t offset)
 {
-    int i, off, level;
-    size_t count = 0, n;
+    int i, level;
     uint32_t blksz, n_blkid;
     struct ext2_fshelp help = {buf, total, 0};
 

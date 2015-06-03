@@ -4,11 +4,9 @@
 
 /*
  * References:
- * http://wiki.osdev.org/PCI_IDE_Controller
- * http://wiki.osdev.org/ATA_PIO_Mode
+ *   http://wiki.osdev.org/PCI_IDE_Controller
+ *   http://wiki.osdev.org/ATA_PIO_Mode
  */
-
-struct ide_dev idv;
 
 static int ide_poll(void)
 {
@@ -86,7 +84,7 @@ int ide_read(uint64_t lba, uint8_t n_sec, uint8_t *data)
     outb(IDE_PRI_CMD, IDE_CMD_PIO_READ);
 
     for (i = 0; i < n_sec; i++) {
-        if (status = ide_poll())
+        if ((status = ide_poll()))
             return status;
         insl(IDE_PRI_DATA, data, 128);
         data += 512;
@@ -113,7 +111,7 @@ int ide_write(uint64_t lba, uint8_t n_sec, uint8_t *data)
     outb(IDE_PRI_CMD, IDE_CMD_PIO_READ);
 
     for (i = 0; i < n_sec; i++) {
-        if (status = ide_poll())
+        if ((status = ide_poll()))
             return status;
         outsl(IDE_PRI_DATA, data, 128);
         data += 512;
