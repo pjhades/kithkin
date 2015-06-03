@@ -25,7 +25,6 @@ image: boot/sector.bin boot/loader.bin kernel/kernel.img
 	dd conv=notrunc if=boot/sector.bin of=disk.img bs=446 count=1
 	dd conv=notrunc skip=510 seek=510 if=boot/sector.bin of=disk.img bs=1 count=2
 	dd conv=notrunc seek=1 if=boot/loader.bin of=disk.img bs=512 count=$$(( ($$(stat --format '%s' boot/loader.bin) + 511)/ 512 ))
-	#TODO: remove this
 	sudo cp disk.img /media/sf_pjhades/code/lab
 
 .PHONY: clean

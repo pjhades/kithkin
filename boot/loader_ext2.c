@@ -222,50 +222,70 @@ ssize_t boot_ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *b
  * Read @total bytes from @inode, starting from byte @offset.
  * Put all read data in @buf. Return the bytes read.
  */
-ssize_t boot_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
-        size_t total, off_t offset)
+ssize_t boot_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode,
+        void *buf, size_t total, off_t offset)
 {
-    int i, level;
-    uint32_t blksz, n_blkid;
+    int i;
+    uint32_t blksz, bbits, bmask, quater, qbits, fileblock;
+    uint64_t filesz;
     struct ext2_fshelp help = {buf, total, 0};
 
-    blksz = 1024 << fs->sb.sb_log_block_size;
-    n_blkid = blksz >> 2;
+    filesz = ((uint64_t)inode->i_dir_acl << 32) | inode->i_size_lo32;
+    if (offset + total > filesz)
+        total = filesz - offset;
 
-    if (offset >= 0 && offset < EXT2_N_DIRECT_BLK_PTR * blksz) {
-        for (i = offset / blksz; i < EXT2_N_BLK_PTRS; i++) {
-            help.index[0] = offset % blksz;
-            level = i < EXT2_N_DIRECT_BLK_PTR ? 0 : i - EXT2_N_DIRECT_BLK_PTR + 1;
-            ext2_read_indirect(fs, inode->i_blocks[i], level, &help);
+    blksz = 1024 << fs->sb.sb_log_block_size;
+    bbits = 10 + fs->sb.sb_log_block_size;
+    bmask = blksz - 1;
+
+    quater = blksz >> 2;
+    qbits = bbits - 2;
+
+    fileblock = offset >> bbits;
+
+    if (fileblock < EXT2_N_DIRECT_BLK_PTR) {
+        for (i = fileblock; i < EXT2_N_DIRECT_BLK_PTR; i++) {
+            help.index[0] = (i == fileblock ? offset & bmask : 0);
+            if (ext2_read_indirect(fs, inode->i_blocks[i], 0, &help) < 0)
+                return -1;
             if (help.count >= total)
                 return total;
         }
         return help.count;
     }
 
+    fileblock -= EXT2_N_DIRECT_BLK_PTR;
     offset -= EXT2_N_DIRECT_BLK_PTR * blksz;
-    if (offset >= 0 && offset < n_blkid * blksz) {
-        help.index[1] = offset / blksz;
-        help.index[0] = offset % blksz;
+    if (fileblock < quater) {
+        help.index[1] = offset >> bbits;
+        help.index[0] = offset & bmask;
         i = EXT2_1_INDIRECT_BLK_PTR;
         goto indirect;
     }
-    offset -= n_blkid * blksz;
-    if (offset >= 0 && offset < n_blkid * n_blkid * blksz) {
-        help.index[2] = offset / (n_blkid * blksz);
-        help.index[1] = offset % (n_blkid * blksz) / blksz;
-        help.index[0] = offset % (n_blkid * blksz) % blksz;
+
+    fileblock -= quater;
+    offset -= quater * blksz;
+    if (fileblock < quater * quater) {
+        uint64_t mask = (1LL << (bbits + qbits)) - 1;
+        help.index[2] = offset >> (bbits + qbits);
+        help.index[1] = (offset & mask) >> bbits;
+        help.index[0] = (offset & mask) & bmask;
         i = EXT2_2_INDIRECT_BLK_PTR;
         goto indirect;
     }
-    offset -= n_blkid * n_blkid * blksz;
-    if (offset >= 0 && offset < n_blkid * n_blkid * n_blkid) {
-        help.index[3] = offset / (n_blkid * n_blkid * blksz);
-        help.index[2] = offset % (n_blkid * n_blkid * blksz) / (n_blkid * blksz);
-        help.index[1] = offset % (n_blkid * n_blkid * blksz) % (n_blkid * blksz) / blksz;
-        help.index[0] = offset % (n_blkid * n_blkid * blksz) % (n_blkid * blksz) % blksz;
+
+    fileblock -= quater * quater;
+    offset -= quater * quater * blksz;
+    if (fileblock < quater * quater * quater) {
+        uint64_t mask1 = (1LL << (bbits + qbits)) - 1,
+                 mask2 = (1LL << (bbits*2 + qbits)) - 1;
+        help.index[3] = offset >> (bbits*2 + qbits);
+        help.index[2] = (offset & mask2) >> (bbits + qbits);
+        help.index[1] = ((offset & mask2) & mask1) >> bbits;
+        help.index[0] = ((offset & mask2) & mask1) & bmask;
         i = EXT2_3_INDIRECT_BLK_PTR;
     }
+
 indirect:
     for (; i < EXT2_N_BLK_PTRS; i++) {
         ext2_read_indirect(fs, inode->i_blocks[i],
