@@ -4,7 +4,8 @@
 #include <kernel/console.h>
 #include <string.h>
 
-static int ext2_read_block(struct ext2_fsinfo *fs, uint32_t blkid, uint8_t *block)
+static int loader_ext2_read_block(struct ext2_fsinfo *fs, uint32_t blkid,
+        uint8_t *block)
 {
     uint32_t blksz;
     uint64_t offset;
@@ -17,7 +18,7 @@ static int ext2_read_block(struct ext2_fsinfo *fs, uint32_t blkid, uint8_t *bloc
 /*
  * Find an inode according to the given inode ID
  */
-static int ext2_find_inode(struct ext2_fsinfo *fs, uint32_t id,
+static int loader_ext2_find_inode(struct ext2_fsinfo *fs, uint32_t id,
         struct ext2_inode *inode)
 {
     int i;
@@ -31,7 +32,7 @@ static int ext2_find_inode(struct ext2_fsinfo *fs, uint32_t id,
     grpid = (id - 1) / fs->sb.sb_n_inodes_per_blkgrp;
     blkid = grpid / (blksz / sizeof(struct ext2_block_group_desc));
 
-    if (ext2_read_block(fs, fs->sb.sb_first_data_block + blkid + 1,
+    if (loader_ext2_read_block(fs, fs->sb.sb_first_data_block + blkid + 1,
                 block) < 0)
         return -1;
 
@@ -43,7 +44,7 @@ static int ext2_find_inode(struct ext2_fsinfo *fs, uint32_t id,
     inode_idx = (id - 1) % fs->sb.sb_n_inodes_per_blkgrp;
     blkid = (inode_idx * fs->sb.sb_inode_size) / blksz;
 
-    if (ext2_read_block(fs, desc.bg_inode_table + blkid, block) < 0)
+    if (loader_ext2_read_block(fs, desc.bg_inode_table + blkid, block) < 0)
         return -1;
 
     inodes = (struct ext2_inode *)block;
@@ -57,8 +58,9 @@ static int ext2_find_inode(struct ext2_fsinfo *fs, uint32_t id,
  * Search the block @blkid as the block of indirect level @level
  * for the file @name, store the result inode in @inode.
  */
-static int ext2_search_dir_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
-        const char *name, struct ext2_inode *inode, int level)
+static int loader_ext2_search_dir_indirect(struct ext2_fsinfo *fs,
+        uint32_t blkid, const char *name, struct ext2_inode *inode,
+        int level)
 {
     int i, found;
     uint8_t block[4096], *p;
@@ -68,7 +70,7 @@ static int ext2_search_dir_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
     blksz = 1024 << fs->sb.sb_log_block_size;
     n_blkid = blksz >> 2;
 
-    if (ext2_read_block(fs, blkid, block) < 0)
+    if (loader_ext2_read_block(fs, blkid, block) < 0)
         return -1;
 
     if (level <= 0) {
@@ -78,7 +80,7 @@ static int ext2_search_dir_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
             if (entry->d_inode == 0)
                 return 0;
             if (strncmp(entry->d_name, name, entry->d_name_len) == 0) {
-                ext2_find_inode(fs, entry->d_inode, inode);
+                loader_ext2_find_inode(fs, entry->d_inode, inode);
                 return 1;
             }
             p += entry->d_rec_len;
@@ -88,7 +90,8 @@ static int ext2_search_dir_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
 
     blkids = (uint32_t *)block;
     for (i = 0; i < n_blkid; i++) {
-        found = ext2_search_dir_indirect(fs, blkids[i], name, inode, level - 1);
+        found = loader_ext2_search_dir_indirect(fs, blkids[i], name, inode,
+                level - 1);
         /* continue only if not found */
         if (found)
             return found;
@@ -101,8 +104,9 @@ static int ext2_search_dir_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
  * inode in @inode. Return 1 if found, 0 if not found,
  * and -1 if error occurred.
  */
-static int ext2_search_dir(struct ext2_fsinfo *fs, struct ext2_inode *dir,
-        const char *name, struct ext2_inode *inode)
+static int loader_ext2_search_dir(struct ext2_fsinfo *fs,
+        struct ext2_inode *dir, const char *name,
+        struct ext2_inode *inode)
 {
     int i, found, level;
 
@@ -113,7 +117,8 @@ static int ext2_search_dir(struct ext2_fsinfo *fs, struct ext2_inode *dir,
 
     for (i = 0; i < EXT2_N_BLK_PTRS; i++) {
         level = i < EXT2_N_DIRECT_BLK_PTR ? 0 : i - EXT2_N_DIRECT_BLK_PTR + 1;
-        found = ext2_search_dir_indirect(fs, dir->i_blocks[i], name, inode, level);
+        found = loader_ext2_search_dir_indirect(fs, dir->i_blocks[i], name,
+                inode, level);
         if (found)
             return found;
     }
@@ -125,7 +130,7 @@ static int ext2_search_dir(struct ext2_fsinfo *fs, struct ext2_inode *dir,
  * Return 1 if found, 0 if not found, and -1 if error
  * occurred.
  */
-int boot_ext2_find_file(struct ext2_fsinfo *fs, const char *path,
+int loader_ext2_find_file(struct ext2_fsinfo *fs, const char *path,
         struct ext2_inode *inode)
 {
     int i, found = 0;
@@ -143,7 +148,7 @@ int boot_ext2_find_file(struct ext2_fsinfo *fs, const char *path,
             name[i] = *q;
         name[i] = '\0';
 
-        found = ext2_search_dir(fs, cur, name, inode);
+        found = loader_ext2_search_dir(fs, cur, name, inode);
         if (found <= 0)
             return found;
 
@@ -153,16 +158,16 @@ int boot_ext2_find_file(struct ext2_fsinfo *fs, const char *path,
     return found;
 }
 
-int boot_ext2_get_fsinfo(struct ext2_fsinfo *fs)
+int loader_ext2_get_fsinfo(struct ext2_fsinfo *fs)
 {
     if (ide_read(off_to_lba(fs->disk_start + 1024), 2, (uint8_t *)&fs->sb))
         return -1;
-    if (ext2_find_inode(fs, EXT2_ROOT_INODE, &fs->root_inode))
+    if (loader_ext2_find_inode(fs, EXT2_ROOT_INODE, &fs->root_inode))
         return -1;
     return 0;
 }
 
-static int ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
+static int loader_ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
         int level, struct ext2_fshelp *help)
 {
     int i;
@@ -173,7 +178,7 @@ static int ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
     n_blkid = blksz >> 2;
 
     if (level <= 0) {
-        if (ext2_read_block(fs, blkid, block) < 0)
+        if (loader_ext2_read_block(fs, blkid, block) < 0)
             return -1;
         sz = blksz - help->index[0] < help->total - help->count ?
              blksz - help->index[0] : help->total - help->count;
@@ -184,13 +189,13 @@ static int ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
         return 0;
     }
 
-    if (ext2_read_block(fs, blkid, block) < 0)
+    if (loader_ext2_read_block(fs, blkid, block) < 0)
         return -1;
     blkids = (uint32_t *)block;
     i = help->index[level];
     help->index[level] = 0;
     for (; i < n_blkid; i++) {
-        if (ext2_read_indirect(fs, blkids[i], level - 1, help) < 0)
+        if (loader_ext2_read_indirect(fs, blkids[i], level - 1, help) < 0)
             return -1;
         if (help->count >= help->total)
             return 0;
@@ -202,7 +207,7 @@ static int ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
  * Read @total bytes from @inode, starting from the very beginning
  * of the file. Put all read data in @buf. Return the bytes read.
  */
-ssize_t boot_ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
+ssize_t loader_ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *buf,
         size_t total)
 {
     int i, level;
@@ -210,7 +215,8 @@ ssize_t boot_ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *b
 
     for (i = 0; i < EXT2_N_BLK_PTRS; i++) {
         level = i < EXT2_N_DIRECT_BLK_PTR ? 0 : i - EXT2_N_DIRECT_BLK_PTR + 1;
-        if (ext2_read_indirect(fs, inode->i_blocks[i], level, &help) == -1)
+        if (loader_ext2_read_indirect(fs, inode->i_blocks[i], level, &help)
+                == -1)
             return -1;
         if (help.count >= total)
             return total;
@@ -222,7 +228,7 @@ ssize_t boot_ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void *b
  * Read @total bytes from @inode, starting from byte @offset.
  * Put all read data in @buf. Return the bytes read.
  */
-ssize_t boot_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode,
+ssize_t loader_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode,
         void *buf, size_t total, off_t offset)
 {
     int i;
@@ -246,7 +252,7 @@ ssize_t boot_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode,
     if (fileblock < EXT2_N_DIRECT_BLK_PTR) {
         for (i = fileblock; i < EXT2_N_DIRECT_BLK_PTR; i++) {
             help.index[0] = (i == fileblock ? offset & bmask : 0);
-            if (ext2_read_indirect(fs, inode->i_blocks[i], 0, &help) < 0)
+            if (loader_ext2_read_indirect(fs, inode->i_blocks[i], 0, &help) < 0)
                 return -1;
             if (help.count >= total)
                 return total;
@@ -288,7 +294,7 @@ ssize_t boot_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode,
 
 indirect:
     for (; i < EXT2_N_BLK_PTRS; i++) {
-        ext2_read_indirect(fs, inode->i_blocks[i],
+        loader_ext2_read_indirect(fs, inode->i_blocks[i],
                 i - EXT2_N_DIRECT_BLK_PTR + 1, &help);
         if (help.count >= total)
             return total;

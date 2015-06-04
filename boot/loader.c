@@ -23,9 +23,9 @@ static int load_kernel(void) {
         addr += 0x10;
     fs.disk_start = (*((uint32_t *)(addr + 8))) << 9;
 
-    boot_ext2_get_fsinfo(&fs);
+    loader_ext2_get_fsinfo(&fs);
 
-    if ((ret = boot_ext2_find_file(&fs, "/boot/kernel.img", &ino)) == -1)
+    if ((ret = loader_ext2_find_file(&fs, "/boot/kernel.img", &ino)) == -1)
         return -1;
     if (ret == 0) {
         cons_puts("Cannot find kernel image\n");
@@ -33,7 +33,7 @@ static int load_kernel(void) {
     }
 
     cons_puts("Loading ELF...\n");
-    boot_ext2_read(&fs, &ino, &elf, sizeof(struct Elf32_Ehdr));
+    loader_ext2_read(&fs, &ino, &elf, sizeof(struct Elf32_Ehdr));
     if (elf.e_ident[EI_MAG0] != 0x7f
             || elf.e_ident[EI_MAG1] != 'E'
             || elf.e_ident[EI_MAG2] != 'L'
@@ -44,7 +44,7 @@ static int load_kernel(void) {
 
     phdr_off = elf.e_phoff;
     for (i = 0; i < elf.e_phnum; i++) {
-        if (boot_ext2_pread(&fs, &ino, &phdr, elf.e_phentsize, phdr_off) == -1)
+        if (loader_ext2_pread(&fs, &ino, &phdr, elf.e_phentsize, phdr_off) == -1)
             return -1;
         if (phdr.p_type != PT_LOAD)
             continue;
@@ -57,7 +57,7 @@ static int load_kernel(void) {
             sz = BUFSZ < (phdr.p_filesz - loadsz) ?
                  BUFSZ : (phdr.p_filesz - loadsz);
 
-            if (boot_ext2_pread(&fs, &ino, buf, sz, phdr.p_offset + loadsz) == -1)
+            if (loader_ext2_pread(&fs, &ino, buf, sz, phdr.p_offset + loadsz) == -1)
                 return -1;
 
             memcpy((char *)(phyaddr + loadsz), buf, sz);
