@@ -4,7 +4,7 @@ export LD = ld
 export INCLUDE := -I$(shell pwd)/include
 export CFLAGS = -Wall -ffreestanding -m32 -c
 
-DEPS = asm lib driver boot kernel
+DEPS = asm lib dev boot kernel
 
 .PHONY: all deps image
 

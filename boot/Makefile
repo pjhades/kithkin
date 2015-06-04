@@ -8,8 +8,8 @@ sector.bin: sector.S
 	$(LD) -Ttext=0x7c00 --oformat binary -nostdlib -static sector.o -o $@
 
 OBJS = loader_asm.o loader_c.o loader_16bit.o loader_ext2.o \
-	   ../driver/ide.o ../driver/console.o \
-	   ../asm/asm.o   ../lib/string.o
+	   ../dev/ide.o ../dev/console.o \
+	   ../asm/asm.o ../lib/string.o
 
 loader.bin: loader.S loader.c loader_16bit.c loader_ext2.c
 	$(CC) $(INCLUDE) $(CFLAGS) loader.S -o loader_asm.o
