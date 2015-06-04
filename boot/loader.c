@@ -78,15 +78,9 @@ static int load_kernel(void) {
 
 void pm_main(void)
 {
-    struct ide_dev drv;
-
     cons_clear_screen();
 
-    ide_init();
-    if (ide_read_identity(&drv.iden)) {
-        cons_puts("Failed to read IDE identity\n");
-        while (1);
-    }
+    ata_init();
 
     if (load_kernel()) {
         cons_puts("Failed to load kernel\n");

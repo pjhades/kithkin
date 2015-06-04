@@ -9,7 +9,7 @@ sector.bin: sector.S
 
 OBJS = loader_asm.o loader_c.o loader_16bit.o loader_ext2.o \
 	   ../dev/ide.o ../dev/console.o \
-	   ../asm/asm.o ../lib/string.o
+	   ../asm/asm.o ../lib/lib.o
 
 loader.bin: loader.S loader.c loader_16bit.c loader_ext2.c
 	$(CC) $(INCLUDE) $(CFLAGS) loader.S -o loader_asm.o

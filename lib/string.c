@@ -38,3 +38,15 @@ int strncmp(const char *s1, const char *s2, size_t n)
         return *((unsigned char *)s1) - *((unsigned char *)s2);
     return 0;
 }
+
+char *strncpy(char *dest, const char *src, size_t n)
+{
+    int i;
+
+    for (i = 0; i < n && src[i] != '\0'; i++)
+        dest[i] = src[i];
+    for (; i < n; i++)
+        dest[i] = '\0';
+
+    return dest;
+}

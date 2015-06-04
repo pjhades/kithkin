@@ -4,6 +4,8 @@
 #define EXT2_ROOT_INODE 2
 #define EXT2_NAME_MAX 255
 
+#define EXT2_SUPERBLOCK_SIZE 1024
+
 struct ext2_superblock {
     uint32_t sb_n_inodes;
     uint32_t sb_n_blocks;

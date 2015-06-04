@@ -12,7 +12,7 @@ static int loader_ext2_read_block(struct ext2_fsinfo *fs, uint32_t blkid,
 
     blksz = 1024 << fs->sb.sb_log_block_size;
     offset = fs->disk_start + blkid * blksz;
-    return ide_read(off_to_lba(offset), blksz >> 9, block);
+    return loader_disk_read(offset, blksz, block);
 }
 
 /*
@@ -160,7 +160,8 @@ int loader_ext2_find_file(struct ext2_fsinfo *fs, const char *path,
 
 int loader_ext2_get_fsinfo(struct ext2_fsinfo *fs)
 {
-    if (ide_read(off_to_lba(fs->disk_start + 1024), 2, (uint8_t *)&fs->sb))
+    if (loader_disk_read(fs->disk_start + 1024, EXT2_SUPERBLOCK_SIZE,
+                &fs->sb) < 0)
         return -1;
     if (loader_ext2_find_inode(fs, EXT2_ROOT_INODE, &fs->root_inode))
         return -1;

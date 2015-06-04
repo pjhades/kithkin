@@ -3,7 +3,7 @@
 
 #define isdigit(x) ((x) >= '0' && (x) <= '9')
 
-static int __num(char *buf, unsigned int num, int base)
+static int tonum(char *buf, unsigned int num, int base)
 {
     int digits = 0;
     char *hex = "0123456789abcdef";
@@ -19,7 +19,7 @@ static int __num(char *buf, unsigned int num, int base)
     return digits;
 }
 
-static int __str(char *buf, char *argstr, int precision)
+static int tostr(char *buf, char *argstr, int precision)
 {
     int len, i;
     char *p;
@@ -80,20 +80,20 @@ int vsprintk(char *str, const char *fmt, va_list va)
                     negative = 1;
                     argint = -argint;
                 }
-                digits = __num(temp, (unsigned int)argint, 10);
+                digits = tonum(temp, (unsigned int)argint, 10);
                 goto set_length;
             case 'p':
                 negative = 2;
             case 'x':
                 arguint = va_arg(va, unsigned int);
-                digits = __num(temp, arguint, 16);
+                digits = tonum(temp, arguint, 16);
 set_length:
                 pad_precision = precision > digits ? precision - digits : 0;
                 len = (precision > digits ? precision : digits) + negative;
                 break;
             case 's':
                 argstr = va_arg(va, char *);
-                digits = __str(temp, argstr, precision);
+                digits = tostr(temp, argstr, precision);
                 pad_precision = 0;
                 len = digits;
                 break;
@@ -102,7 +102,7 @@ set_length:
                 continue;
         }
 
-#define PRINT_ARG                                   \
+#define printarg()                                  \
     do {                                            \
         if (negative == 1)                          \
             str[bytes++] = '-';                     \
@@ -115,18 +115,21 @@ set_length:
             str[bytes++] = temp[digits];            \
     } while (0)
 
-#define PRINT_PAD                                           \
+#define printpad()                                          \
     do {                                                    \
         for (; pad_width > 0; pad_width--)                  \
             str[bytes++] = width_prefix == '0' ? '0' : ' '; \
     } while (0)
 
         pad_width = width > len ? width - len : 0;
-        if (width_prefix == '-')
-            PRINT_ARG;
-        PRINT_PAD;
-        if (width_prefix != '-')
-            PRINT_ARG;
+        if (width_prefix == '-') {
+            printarg();
+            printpad();
+        }
+        else {
+            printpad();
+            printarg();
+        }
         str[bytes] = '\0';
 
         fmt = p + 1;
