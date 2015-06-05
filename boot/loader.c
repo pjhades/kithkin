@@ -15,8 +15,8 @@ static int load_kernel(void) {
     uint32_t phdr_off, phyaddr;
     struct ext2_fsinfo fs;
     struct ext2_inode ino;
-    struct Elf32_Ehdr elf;
-    struct Elf32_Phdr phdr;
+    struct elf32_Ehdr elf;
+    struct elf32_Phdr phdr;
 
     /* get LBA of first sector from partition table */
     addr = (uint8_t *)0x7dbe; /* 0x7c00 + 446 */
@@ -34,7 +34,7 @@ static int load_kernel(void) {
     }
 
     printk("Loading ELF...\n");
-    loader_ext2_read(&fs, &ino, &elf, sizeof(struct Elf32_Ehdr));
+    loader_ext2_read(&fs, &ino, &elf, sizeof(struct elf32_Ehdr));
     if (elf.e_ident[EI_MAG0] != 0x7f
             || elf.e_ident[EI_MAG1] != 'E'
             || elf.e_ident[EI_MAG2] != 'L'

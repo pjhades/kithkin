@@ -3,30 +3,30 @@
 
 #include <kernel/types.h>
 
-typedef uint32_t Elf32_Addr;
-typedef uint16_t Elf32_Half;
-typedef uint32_t Elf32_Off;
-typedef int32_t  Elf32_Sword;
-typedef uint32_t Elf32_Word;
+typedef uint32_t elf32_Addr;
+typedef uint16_t elf32_Half;
+typedef uint32_t elf32_Off;
+typedef int32_t  elf32_Sword;
+typedef uint32_t elf32_Word;
 
 #define EI_NIDENT 16
 
-typedef struct Elf32_Ehdr {
+typedef struct elf32_Ehdr {
     unsigned char e_ident[EI_NIDENT];
-    Elf32_Half    e_type;
-    Elf32_Half    e_machine;
-    Elf32_Word    e_version;
-    Elf32_Addr    e_entry;
-    Elf32_Off     e_phoff;
-    Elf32_Off     e_shoff;
-    Elf32_Word    e_flags;
-    Elf32_Half    e_ehsize;
-    Elf32_Half    e_phentsize;
-    Elf32_Half    e_phnum;
-    Elf32_Half    e_shentsize;
-    Elf32_Half    e_shnum;
-    Elf32_Half    e_shstrndx;
-} Elf32_Ehdr;
+    elf32_Half    e_type;
+    elf32_Half    e_machine;
+    elf32_Word    e_version;
+    elf32_Addr    e_entry;
+    elf32_Off     e_phoff;
+    elf32_Off     e_shoff;
+    elf32_Word    e_flags;
+    elf32_Half    e_ehsize;
+    elf32_Half    e_phentsize;
+    elf32_Half    e_phnum;
+    elf32_Half    e_shentsize;
+    elf32_Half    e_shnum;
+    elf32_Half    e_shstrndx;
+} elf32_Ehdr;
 
 #define ET_NONE   0
 #define ET_REL    1
@@ -58,16 +58,16 @@ typedef struct Elf32_Ehdr {
 #define EI_PAD     7
 #define EI_NIDENT  16
 
-typedef struct Elf32_Phdr {
-    Elf32_Word p_type;
-    Elf32_Off  p_offset;
-    Elf32_Addr p_vaddr;
-    Elf32_Addr p_paddr;
-    Elf32_Word p_filesz;
-    Elf32_Word p_memsz;
-    Elf32_Word p_flags;
-    Elf32_Word p_align;
-} Elf32_Phdr;
+typedef struct elf32_Phdr {
+    elf32_Word p_type;
+    elf32_Off  p_offset;
+    elf32_Addr p_vaddr;
+    elf32_Addr p_paddr;
+    elf32_Word p_filesz;
+    elf32_Word p_memsz;
+    elf32_Word p_flags;
+    elf32_Word p_align;
+} elf32_Phdr;
 
 #define PT_NULL    0
 #define PT_LOAD    1
