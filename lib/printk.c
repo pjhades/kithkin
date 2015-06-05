@@ -3,6 +3,26 @@
 
 #define isdigit(x) ((x) >= '0' && (x) <= '9')
 
+#define printarg()                                  \
+    do {                                            \
+        if (negative == 1)                          \
+            str[bytes++] = '-';                     \
+        else if (negative == 2) {                   \
+            str[bytes++] = '0'; str[bytes++] = 'x'; \
+        }                                           \
+        for (; pad_precision > 0; pad_precision--)  \
+            str[bytes++] = '0';                     \
+        for (--digits; digits >= 0; digits--)       \
+            str[bytes++] = temp[digits];            \
+    } while (0)
+
+#define printpad()                                          \
+    do {                                                    \
+        for (; pad_width > 0; pad_width--)                  \
+            str[bytes++] = width_prefix == '0' ? '0' : ' '; \
+    } while (0)
+
+
 static int tonum(char *buf, unsigned int num, int base)
 {
     int digits = 0;
@@ -50,7 +70,7 @@ int vsprintk(char *str, const char *fmt, va_list va)
         width_prefix = '+';
         p = fmt + 1;
         if (!*p)
-            return bytes;
+            goto end;
         if (*p == '%') {
             str[bytes++] = '%';
             continue;
@@ -63,14 +83,14 @@ int vsprintk(char *str, const char *fmt, va_list va)
         for (; *p && *p != '.' && isdigit(*p); p++)
             width = width * 10 + (*p - '0');
         if (!*p)
-            return bytes;
+            goto end;
         /* precision */
         if (*p == '.') {
             ++p;
             for (; *p && isdigit(*p); p++)
                 precision = precision * 10 + (*p - '0');
             if (!*p)
-                return bytes;
+                goto end;
         }
         /* conversion */
         switch (*p) {
@@ -102,25 +122,6 @@ set_length:
                 continue;
         }
 
-#define printarg()                                  \
-    do {                                            \
-        if (negative == 1)                          \
-            str[bytes++] = '-';                     \
-        else if (negative == 2) {                   \
-            str[bytes++] = '0'; str[bytes++] = 'x'; \
-        }                                           \
-        for (; pad_precision > 0; pad_precision--)  \
-            str[bytes++] = '0';                     \
-        for (--digits; digits >= 0; digits--)       \
-            str[bytes++] = temp[digits];            \
-    } while (0)
-
-#define printpad()                                          \
-    do {                                                    \
-        for (; pad_width > 0; pad_width--)                  \
-            str[bytes++] = width_prefix == '0' ? '0' : ' '; \
-    } while (0)
-
         pad_width = width > len ? width - len : 0;
         if (width_prefix == '-') {
             printarg();
@@ -134,6 +135,9 @@ set_length:
 
         fmt = p + 1;
     }
+
+end:
+    str[bytes] = '\0';
     return bytes;
 }
 

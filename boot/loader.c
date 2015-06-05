@@ -1,8 +1,9 @@
 #include <string.h>
 #include <elf.h>
+#include <kernel/types.h>
+#include <kernel/kernel.h>
 #include <kernel/ide.h>
 #include <kernel/console.h>
-#include <kernel/types.h>
 #include <kernel/ext2.h>
 #include <kernel/mm.h>
 
@@ -28,17 +29,17 @@ static int load_kernel(void) {
     if ((ret = loader_ext2_find_file(&fs, "/boot/kernel.img", &ino)) == -1)
         return -1;
     if (ret == 0) {
-        cons_puts("Cannot find kernel image\n");
+        printk("Cannot find kernel image\n");
         return 0;
     }
 
-    cons_puts("Loading ELF...\n");
+    printk("Loading ELF...\n");
     loader_ext2_read(&fs, &ino, &elf, sizeof(struct Elf32_Ehdr));
     if (elf.e_ident[EI_MAG0] != 0x7f
             || elf.e_ident[EI_MAG1] != 'E'
             || elf.e_ident[EI_MAG2] != 'L'
             || elf.e_ident[EI_MAG3] != 'F') {
-        cons_puts("Bad ELF file\n");
+        printk("Bad ELF file\n");
         return -1;
     }
 
@@ -83,7 +84,7 @@ void pm_main(void)
     ata_init();
 
     if (load_kernel()) {
-        cons_puts("Failed to load kernel\n");
+        printk("Failed to load kernel\n");
         while (1);
     }
 

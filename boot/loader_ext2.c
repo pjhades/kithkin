@@ -1,4 +1,5 @@
 #include <kernel/types.h>
+#include <kernel/kernel.h>
 #include <kernel/ext2.h>
 #include <kernel/ide.h>
 #include <kernel/console.h>
@@ -111,7 +112,7 @@ static int loader_ext2_search_dir(struct ext2_fsinfo *fs,
     int i, found, level;
 
     if (!(dir->i_mode & EXT2_TYPE_DIR)) {
-        cons_puts("Current inode is not a directory\n");
+        printk("Current inode is not a directory\n");
         return -1;
     }
 
