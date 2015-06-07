@@ -20,7 +20,7 @@ _start:
     movl $page_directory, %eax
     movl %eax, %cr3
     movl %cr0, %eax
-    orl  $0x80000000, %eax
+    orl  $CR0_PG, %eax
     movl %eax, %cr0
     jmp 3f
 3:

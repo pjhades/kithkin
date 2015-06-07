@@ -14,24 +14,24 @@ SECTIONS {
 
 	. = KERNEL_START + KERNEL_VM_START + SIZEOF(.text.entry);
 
+    PROVIDE(_stext = .);
     .text : AT(ADDR(.text) - KERNEL_VM_START)
     {
-        _stext = .;
         *(.text);
-        _etext = .;
     }
+    PROVIDE(_etext = .);
 
+    PROVIDE(_sdata = .);
     .data : AT(ADDR(.data) - KERNEL_VM_START)
     {
-        _sdata = .;
         *(.rodata .data);
-        _edata = .;
     }
+    PROVIDE(_edata = .);
 
+    PROVIDE(_sbss = .);
     .bss : AT(ADDR(.bss) - KERNEL_VM_START)
     {
-        _sbss = .;
         *(.bss);
-        _ebss = .;
     }
+    PROVIDE(_ebss = .);
 }

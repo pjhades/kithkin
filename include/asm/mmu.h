@@ -37,5 +37,6 @@
 #define PTE_PAT 0x80
 #define PTE_G   0x100
 
+#define CR0_PG  0x80000000
 
 #endif
