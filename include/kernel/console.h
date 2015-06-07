@@ -14,14 +14,14 @@
 
 typedef uint16_t (*console_mem_ptr_t)[CONSOLE_COLS];
 
-struct console {
-    uint8_t c_row;
-    uint8_t c_col;
+struct console_device {
+    uint8_t row;
+    uint8_t col;
 };
 
-void cons_clear_screen(void);
-void cons_putchar(char ch);
-void cons_puts(const char *s);
-void cons_puthex(uint64_t hex);
+void console_clear_screen(void);
+void cputchar(char ch);
+void cputs(const char *s);
+void cputhex(uint64_t hex);
 
 #endif

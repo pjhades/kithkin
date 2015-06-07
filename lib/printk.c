@@ -150,6 +150,6 @@ int printk(const char *fmt, ...)
     va_start(va, fmt);
     count = vsprintk(temp, fmt, va);
     va_end(va);
-    cons_puts(temp);
+    cputs(temp);
     return count;
 }

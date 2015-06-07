@@ -6,15 +6,15 @@ int test;
 
 void kernel_main(void)
 {
-    cons_clear_screen();
+    console_clear_screen();
 
-    cons_puts("address of test: ");
-    cons_puthex((uint32_t)&test);
-    cons_puts("\n");
-    cons_puts("hello world!\n");
+    cputs("address of test: ");
+    cputhex((uint32_t)&test);
+    cputs("\n");
+    cputs("hello world!\n");
 
     int a = printk("%d + %d = %d\n", 199, 145, 199 + 145);
-    cons_puthex(a);
+    cputhex(a);
 
     while (1);
 }

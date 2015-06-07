@@ -79,7 +79,7 @@ static int load_kernel(void) {
 
 void pm_main(void)
 {
-    cons_clear_screen();
+    console_clear_screen();
 
     ata_init();
 
