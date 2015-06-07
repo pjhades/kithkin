@@ -7,7 +7,7 @@
 asm (".code16gcc\n");
 
 void print_string(char *s, int len);
-void jump_to_protected_mode(void);
+void enter_protected_mode(void);
 
 inline static int check_a20(void)
 {
@@ -131,21 +131,10 @@ uint64_t boot_gdt[] = {
     [BOOT_GDT_ENTRY_DATA] = SEG_DESC(0x0, 0xfffff, 0xc092),
 };
 
-struct gdt_ptr gdt;
-
-static void enter_protected_mode(void)
-{
-    gdt.len = sizeof(boot_gdt) - 1;
-    gdt.ptr = (uint32_t)&boot_gdt;
-    asm volatile (
-            "lgdt %0\n\t"
-            "movl %%cr0, %%eax\n\t"
-            "orl $0x1, %%eax\n\t"
-            "movl %%eax, %%cr0\n\t"
-            : :"m"(gdt) :
-            );
-    jump_to_protected_mode();
-}
+struct gdt_ptr boot_gdtptr = {
+    .len = sizeof(boot_gdt) - 1,
+    .ptr = (uint32_t)&boot_gdt
+};
 
 void main(void)
 {

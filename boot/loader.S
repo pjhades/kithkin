@@ -33,9 +33,14 @@ print_string:
     ret
 
 
-.globl jump_to_protected_mode
-jump_to_protected_mode:
-    ljmp    $BOOT_CS, $pm_entry
+.global enter_protected_mode
+enter_protected_mode:
+    lgdt boot_gdtptr
+    movl %cr0, %eax
+    orl $CR0_PM, %eax
+    movl %eax, %cr0
+    ljmp $BOOT_CS, $pm_entry
+
 
 .equ stack, BOOT_STACK
 
@@ -48,8 +53,6 @@ pm_entry:
     movw %ax, %gs
     movw %ax, %ss
     movl $stack, %esp
-
     call pm_main
-
     jmp .
 
