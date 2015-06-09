@@ -1,26 +1,26 @@
+#include <stdarg.h>
 #include <kernel/console.h>
 #include <kernel/types.h>
-#include <stdarg.h>
 
 #define isdigit(x) ((x) >= '0' && (x) <= '9')
 
 #define printarg()                                  \
     do {                                            \
-        if (negative == 1)                          \
+        if (sign == 1)                              \
             str[bytes++] = '-';                     \
-        else if (negative == 2) {                   \
+        else if (sign == 2) {                       \
             str[bytes++] = '0'; str[bytes++] = 'x'; \
         }                                           \
-        for (; pad_precision > 0; pad_precision--)  \
+        for (; precisionpad > 0; precisionpad--)    \
             str[bytes++] = '0';                     \
         for (--digits; digits >= 0; digits--)       \
             str[bytes++] = temp[digits];            \
     } while (0)
 
-#define printpad()                                          \
-    do {                                                    \
-        for (; pad_width > 0; pad_width--)                  \
-            str[bytes++] = width_prefix == '0' ? '0' : ' '; \
+#define printpad()                                         \
+    do {                                                   \
+        for (; widthpad > 0; widthpad--)                   \
+            str[bytes++] = widthprefix == '0' ? '0' : ' '; \
     } while (0)
 
 
@@ -54,10 +54,12 @@ static int tostr(char *buf, char *argstr, int precision)
 
 int vsprintk(char *str, const char *fmt, va_list va)
 {
-    int digits, bytes, width, precision, argint,
-        pad_precision, pad_width, len;
-    unsigned int arguint;
-    char *argstr, width_prefix, negative, temp[1024];
+    int len, digits, bytes, width, precision, i32,
+        precisionpad = 0, widthpad = 0;
+    unsigned int u32;
+    int64_t i64;
+    uint64_t u64;
+    char *argstr, widthprefix, sign, temp[1024];
     const char *p;
 
     for (bytes = 0; *fmt; ) {
@@ -67,8 +69,8 @@ int vsprintk(char *str, const char *fmt, va_list va)
             continue;
         }
 
-        width = precision = negative = 0;
-        width_prefix = '+';
+        width = precision = sign = 0;
+        widthprefix = '+';
         p = fmt + 1;
         if (!*p)
             goto end;
@@ -76,15 +78,17 @@ int vsprintk(char *str, const char *fmt, va_list va)
             str[bytes++] = '%';
             continue;
         }
+
         /* width */
         if (*p == '+' || *p == '-' || *p == '0') {
-            width_prefix = *p;
+            widthprefix = *p;
             ++p;
         }
         for (; *p && *p != '.' && isdigit(*p); p++)
             width = width * 10 + (*p - '0');
         if (!*p)
             goto end;
+
         /* precision */
         if (*p == '.') {
             ++p;
@@ -93,38 +97,68 @@ int vsprintk(char *str, const char *fmt, va_list va)
             if (!*p)
                 goto end;
         }
+
         /* conversion */
         switch (*p) {
             case 'd':
-                argint = va_arg(va, int);
-                if (argint < 0) {
-                    negative = 1;
-                    argint = -argint;
+                i32 = va_arg(va, int);
+                if (i32 < 0) {
+                    sign = 1;
+                    i32 = -i32;
                 }
-                digits = tonum(temp, (unsigned int)argint, 10);
-                goto set_length;
+                digits = tonum(temp, i32, 10);
+                goto setlength;
+
+            case 'u':
+                u32 = va_arg(va, unsigned int);
+                digits = tonum(temp, u32, 10);
+                goto setlength;
+
+            case 'q':
+                i64 = va_arg(va, int64_t);
+                if (i64 < 0) {
+                    sign = 1;
+                    i64 = -i64;
+                }
+                digits = tonum(temp, i64, 10);
+                goto setlength;
+
+            case 'U':
+                u64 = va_arg(va, uint64_t);
+                digits = tonum(temp, u64, 10);
+                goto setlength;
+
+            case 'X':
+                u64 = va_arg(va, uint64_t);
+                digits = tonum(temp, u64, 16);
+                goto setlength;
+
             case 'p':
-                negative = 2;
+                sign = 2;
             case 'x':
-                arguint = va_arg(va, unsigned int);
-                digits = tonum(temp, arguint, 16);
-set_length:
-                pad_precision = precision > digits ? precision - digits : 0;
-                len = (precision > digits ? precision : digits) + negative;
+                u32 = va_arg(va, unsigned int);
+                digits = tonum(temp, u32, 16);
+setlength:
+                if (precision > digits)
+                    precisionpad = precision - digits;
+                len = (precision > digits ? precision : digits) + sign;
                 break;
+
             case 's':
                 argstr = va_arg(va, char *);
                 digits = tostr(temp, argstr, precision);
-                pad_precision = 0;
+                precisionpad = 0;
                 len = digits;
                 break;
+
             default:
                 fmt = p + 1;
                 continue;
         }
 
-        pad_width = width > len ? width - len : 0;
-        if (width_prefix == '-') {
+        if (width > len)
+            widthpad = width - len;
+        if (widthprefix == '-') {
             printarg();
             printpad();
         }

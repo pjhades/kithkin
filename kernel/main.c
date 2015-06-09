@@ -15,6 +15,11 @@ void kernel_main(void)
 
     int a = printk("%d + %d = %d\n", 199, 145, 199 + 145);
     cputhex(a);
+    printk("\n");
+    unsigned int b = 0x80000000;
+    printk("i: %d\nu: %u\n", b, b);
+    uint64_t c = 0x8000000000000000LL;
+    printk("q: %q\nU: %U\n", c, c);
 
     while (1);
 }
