@@ -1,4 +1,5 @@
 #include <kernel/console.h>
+#include <kernel/types.h>
 #include <stdarg.h>
 
 #define isdigit(x) ((x) >= '0' && (x) <= '9')
@@ -23,7 +24,7 @@
     } while (0)
 
 
-static int tonum(char *buf, unsigned int num, int base)
+static int tonum(char *buf, uint64_t num, int base)
 {
     int digits = 0;
     char *hex = "0123456789abcdef";

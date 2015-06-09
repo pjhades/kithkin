@@ -8,7 +8,7 @@ kernel.img: $(SRCS)
 	for file in $(SRCS); do \
 		$(CC) $(INCLUDE) $(CFLAGS) $$file; \
 	done
-	ld -T kernel.ld -m elf_i386 $(OBJS) $(DEPOBJS) -o $@
+	$(CC) -T kernel.ld $(OBJS) $(DEPOBJS) $(LDFLAGS) -lgcc -o $@
 
 .PHONY: clean
 clean:

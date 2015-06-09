@@ -17,8 +17,8 @@ loader.bin: loader.S loader.c loader_16bit.c loader_ext2.c
 	$(CC) $(INCLUDE) $(CFLAGS) loader_16bit.c 
 	$(CC) $(INCLUDE) $(CFLAGS) loader_ext2.c
 	@echo "Compiling bootloader ..."
-	$(LD) -T loader.ld -m elf_i386 $(OBJS) -o loader.elf
-	objcopy -j .text -j .rodata -j .bss -j .data -O binary loader.elf $@
+	$(CC) -T loader.ld $(OBJS) $(LDFLAGS) -lgcc -o loader.elf
+	$(OBJCOPY) -j .text -j .rodata -j .bss -j .data -O binary loader.elf $@
 
 clean:
 	rm -f *.o *.bin *.elf

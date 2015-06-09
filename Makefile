@@ -1,16 +1,20 @@
-export CC = gcc
-export AS = as
-export LD = ld
+PREFIX := $(HOME)/cross/bin/i686-elf-
+
+export CC      := $(PREFIX)gcc
+export AS      := $(PREFIX)as
+export LD      := $(PREFIX)ld
+export OBJCOPY := $(PREFIX)objcopy
 export INCLUDE := -I$(shell pwd)/include
-export CFLAGS = -Wall -ffreestanding -m32 -c
+export CFLAGS  := -Wall -ffreestanding -c
+export LDFLAGS := -nostdlib
 
-DEPS = asm lib dev boot kernel
+DEPS := asm lib dev boot kernel
 
-.PHONY: all deps image
+.PHONY: all subdirs image
 
-all: deps image
+all: subdirs image
 
-deps:
+subdirs:
 	for dir in $(DEPS); do \
 		(cd $$dir; $(MAKE)); \
 	done

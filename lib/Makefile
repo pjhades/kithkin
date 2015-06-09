@@ -5,7 +5,7 @@ lib.o: $(SRCS)
 	for file in $(SRCS); do \
 		$(CC) $(INCLUDE) $(CFLAGS) $$file; \
 	done
-	$(LD) -r -m elf_i386 $(OBJS) -o $@
+	$(LD) -r $(OBJS) $(LDFLAGS) -o $@
 
 .PHONY: clean
 clean:
