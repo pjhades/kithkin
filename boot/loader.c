@@ -90,7 +90,7 @@ static void copy_kernel_data()
     *((unsigned char *)dst) = KERNDATA_NONE;
 }
 
-void pm_main(void)
+void loader_main(void)
 {
     void *entry;
 

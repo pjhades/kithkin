@@ -47,6 +47,6 @@ pm_entry:
     movw %ax, %gs
     movw %ax, %ss
     movl $BOOT_STACK, %esp
-    call pm_main
+    call loader_main
     jmp .
 
