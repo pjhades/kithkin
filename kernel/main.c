@@ -1,3 +1,4 @@
+#include <asm/e820.h>
 #include <kernel/kernel.h>
 #include <kernel/types.h>
 #include <kernel/console.h>

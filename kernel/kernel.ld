@@ -5,8 +5,6 @@ KERNEL_START = 0x100000;
 KERNEL_VM_START = 0xc0000000;
 
 SECTIONS {
-    . = KERNEL_VM_START;
-
     .text.entry KERNEL_START : AT(KERNEL_START)
     {
         *(.text.entry);

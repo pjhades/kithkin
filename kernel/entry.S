@@ -7,7 +7,7 @@
 _start:
     /* fill the two page directory to map first 8MB memory */
     movl $pgdir0, %edi
-    movl $(N_PTE_PER_PDE << 1), %ecx
+    movl $(N_PTE_PER_PDE << 2), %ecx
     movl $(PTE_P | PTE_RW | PTE_US), %eax
 1:
     test %ecx, %ecx
@@ -39,21 +39,38 @@ _start:
 page_directory:
     .long 0x00102000 | PDE_P | PDE_RW | PDE_US
     .long 0x00103000 | PDE_P | PDE_RW | PDE_US
-    .fill N_USER_PDE - 2, 4, 0
+    .long 0x00104000 | PDE_P | PDE_RW | PDE_US
+    .long 0x00105000 | PDE_P | PDE_RW | PDE_US
+    .fill N_USER_PDE - 4, 4, 0
     .long 0x00102000 | PDE_P | PDE_RW | PDE_US
     .long 0x00103000 | PDE_P | PDE_RW | PDE_US
-    .fill N_KERNEL_PDE - 2, 4, 0
+    .long 0x00104000 | PDE_P | PDE_RW | PDE_US
+    .long 0x00105000 | PDE_P | PDE_RW | PDE_US
+    .fill N_KERNEL_PDE - 4, 4, 0
 
-/* 1st page directory: physical [0, 4MB) */
+/* 1st: physical [0, 4MB) */
 .org 0x2000
 .globl pgdir0
 pgdir0:
 
-/* 2nd page directory: physical [4, 8MB)*/
+/* 2nd: physical [4, 8MB)*/
 .org 0x3000
 .globl pgdir1
 pgdir1:
 
+/* 3rd: physical [8, 12MB)*/
 .org 0x4000
+.globl pgdir2
+pgdir2:
+
+/* 4th: physical [12, 16MB)*/
+.org 0x5000
+.globl pgdir3
+pgdir3:
+
+/* 4KB space holding data passed by loader */
+.org 0x6000
 .globl startup_data
 startup_data:
+
+.org 0x7000

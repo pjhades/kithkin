@@ -3,13 +3,12 @@
 #include <kernel/types.h>
 #include <kernel/kernel.h>
 #include <kernel/ide.h>
-#include <kernel/console.h>
 #include <kernel/ext2.h>
-#include <kernel/mm.h>
+#include <kernel/kerndata.h>
 
 #define BUFSZ 1024
 
-static int load_kernel(void) {
+static void *load_kernel(void) {
     int i, ret, sz, loadsz;
     uint8_t *addr, buf[BUFSZ];
     uint32_t phdr_off, phyaddr;
@@ -25,12 +24,11 @@ static int load_kernel(void) {
     fs.disk_start = (*((uint32_t *)(addr + 8))) << 9;
 
     loader_ext2_get_fsinfo(&fs);
-
     if ((ret = loader_ext2_find_file(&fs, "/boot/kernel.img", &ino)) == -1)
-        return -1;
+        return NULL;
     if (ret == 0) {
         printk("Cannot find kernel image\n");
-        return 0;
+        return NULL;
     }
 
     printk("Loading ELF...\n");
@@ -40,53 +38,68 @@ static int load_kernel(void) {
             || elf.e_ident[EI_MAG2] != 'L'
             || elf.e_ident[EI_MAG3] != 'F') {
         printk("Bad ELF file\n");
-        return -1;
+        return NULL;
     }
 
     phdr_off = elf.e_phoff;
     for (i = 0; i < elf.e_phnum; i++) {
         if (loader_ext2_pread(&fs, &ino, &phdr, elf.e_phentsize, phdr_off) == -1)
-            return -1;
+            return NULL;
         if (phdr.p_type != PT_LOAD)
             continue;
 
-        phyaddr = phdr.p_vaddr >= KERNEL_VM_START ?
-            phdr.p_vaddr - KERNEL_VM_START : phdr.p_vaddr;
-        loadsz = 0;
+        if (phdr.p_vaddr >= KERNEL_VM_START)
+            phyaddr = phdr.p_vaddr - KERNEL_VM_START;
+        else
+            phyaddr = phdr.p_vaddr;
 
+        loadsz = 0;
         while (loadsz < phdr.p_filesz) {
             sz = BUFSZ < (phdr.p_filesz - loadsz) ?
                  BUFSZ : (phdr.p_filesz - loadsz);
-
             if (loader_ext2_pread(&fs, &ino, buf, sz, phdr.p_offset + loadsz) == -1)
-                return -1;
-
+                return NULL;
             memcpy((char *)(phyaddr + loadsz), buf, sz);
-
             loadsz += sz;
         }
-
         if (loadsz < phdr.p_memsz)
             memset((char *)(phyaddr + loadsz), 0, phdr.p_memsz - loadsz);
-
         phdr_off += elf.e_phentsize;
     }
 
-    ((void(*)(void))elf.e_entry)();
+    return (void *)elf.e_entry;
+}
 
-    return 0;
+static void copy_kernel_data()
+{
+    char *dst = (char *)KERNEL_STARTUP_DATA;
+#define COPY(ptr, var, tag) \
+    do { \
+        *((unsigned char *)(ptr)) = tag; \
+        (ptr) += sizeof(unsigned char); \
+        *((uint32_t *)(ptr)) = sizeof((var)); \
+        (ptr) += sizeof(uint32_t); \
+        memcpy((ptr), (void *)&(var), sizeof((var))); \
+        (ptr) += sizeof((var)); \
+    } while (0)
+
+    COPY(dst, boot_gdt, KERNDATA_BOOTGDT);
+    COPY(dst, boot_gdtptr, KERNDATA_BOOTGDTPTR);
+    COPY(dst, e820map, KERNDATA_E820);
+#undef COPY
+    *((unsigned char *)dst) = KERNDATA_NONE;
 }
 
 void pm_main(void)
 {
-    console_clear_screen();
+    void *entry;
 
     ata_init();
-
-    if (load_kernel()) {
+    if (!(entry = load_kernel())) {
         printk("Failed to load kernel\n");
         while (1);
     }
-
+    copy_kernel_data();
+    ((void (*)(void))entry)();
     while (1);
 }

@@ -1,7 +1,5 @@
 #include <asm/mmu.h>
 
-#define BOOT_STACK 0x07ffff
-
 .globl _start
 
 .text
@@ -32,7 +30,6 @@ print_string:
     popl %ecx
     ret
 
-
 .global enter_protected_mode
 enter_protected_mode:
     lgdt boot_gdtptr
@@ -40,9 +37,6 @@ enter_protected_mode:
     orl $CR0_PM, %eax
     movl %eax, %cr0
     ljmp $BOOT_CS, $pm_entry
-
-
-.equ stack, BOOT_STACK
 
 .code32
 pm_entry:
@@ -52,7 +46,7 @@ pm_entry:
     movw %ax, %fs
     movw %ax, %gs
     movw %ax, %ss
-    movl $stack, %esp
+    movl $BOOT_STACK, %esp
     call pm_main
     jmp .
 

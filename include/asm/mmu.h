@@ -13,12 +13,13 @@
       (((uint64_t)limit)&0x0000ffff))
 #endif
 
-/* for the initial GDT entries in bootloader */
 #define BOOT_GDT_ENTRY_CODE 1
 #define BOOT_GDT_ENTRY_DATA 2
+#define N_BOOT_GDT_ENTRY    3
 
 #define BOOT_CS (BOOT_GDT_ENTRY_CODE << 3)
 #define BOOT_DS (BOOT_GDT_ENTRY_DATA << 3)
+#define BOOT_STACK 0x7ffff
 
 #define PDE_P   0x1
 #define PDE_RW  0x2

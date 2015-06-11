@@ -1,3 +1,4 @@
+#include <string.h>
 #include <asm/x86.h>
 #include <asm/e820.h>
 #include <asm/mmu.h>
@@ -5,6 +6,8 @@
 #include <kernel/types.h>
 
 asm (".code16gcc\n");
+
+struct mem_e820_map e820map;
 
 void print_string(char *s, int len);
 void enter_protected_mode(void);
@@ -44,7 +47,7 @@ static int enable_a20(void)
 {
     uint8_t value;
 
-    if (!check_a20())
+    if (check_a20() == 0)
         return 0;
 
     /* try BIOS service */
@@ -53,7 +56,7 @@ static int enable_a20(void)
             "int $0x15\n\t"
             );
 
-    if (!check_a20())
+    if (check_a20() == 0)
         return 0;
 
     /* try 8042 keyboard controller */
@@ -71,14 +74,14 @@ static int enable_a20(void)
     outb(0x64, 0xae); /* enable keyboard */
     wait_write_8042();
 
-    if (!check_a20())
+    if (check_a20() == 0)
         return 0;
 
     /* try fast A20 gate */
     value = inb(0x92);
     outb(0x92, value | 0x02);
             
-    if (!check_a20())
+    if (check_a20() == 0)
         return 0;
     return -1;
 }
@@ -115,14 +118,14 @@ static int detect_memory(void)
         ".e820_last:\n\t"
             "xorl %%eax, %%eax\n\t"
         ".e820_done:\n\t"
-            :"=S"(e820_map.n_regions), "=a"(error)
-            :"S"(e820_map.n_regions), "D"(e820_map.regions), "m"(size)
+            :"=S"(e820map.n_regions), "=a"(error)
+            :"S"(e820map.n_regions), "D"(e820map.regions), "m"(size)
             :
             );
     return error ? -1 : 0;
 }
 
-uint64_t boot_gdt[] = {
+uint64_t boot_gdt[N_BOOT_GDT_ENTRY] = {
     /* 0: null descriptor */
     [0] = SEG_DESC(0x0, 0x0, 0x0),
     /* 1: 32-bit read/executable code segment, 4k granularity, DPL 0 */
@@ -139,11 +142,11 @@ struct gdt_ptr boot_gdtptr = {
 void main(void)
 {
     print_string("Enabling A20 line ...\r\n", 23);
-    if (enable_a20())
+    if (enable_a20() < 0)
         die();
 
     print_string("Detecting memory map ...\r\n", 26);
-    if (detect_memory())
+    if (detect_memory() < 0)
         die();
 
     print_string("Switching to protected mode ...\r\n", 33);
