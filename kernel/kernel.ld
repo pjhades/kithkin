@@ -5,31 +5,35 @@ KERNEL_START = 0x100000;
 KERNEL_VM_START = 0xc0000000;
 
 SECTIONS {
-    .text.entry KERNEL_START : AT(KERNEL_START)
+    . = KERNEL_START;
+
+    .text.entry : AT(KERNEL_START)
     {
+        PROVIDE(_stextentry = .);
         *(.text.entry);
+        PROVIDE(_etextentry = .);
     }
 
 	. = KERNEL_START + KERNEL_VM_START + SIZEOF(.text.entry);
 
-    PROVIDE(_stext = .);
     .text : AT(ADDR(.text) - KERNEL_VM_START)
     {
+        PROVIDE(_stext = .);
         *(.text);
+        PROVIDE(_etext = .);
     }
-    PROVIDE(_etext = .);
 
-    PROVIDE(_sdata = .);
     .data : AT(ADDR(.data) - KERNEL_VM_START)
     {
+        PROVIDE(_sdata = .);
         *(.rodata .data);
+        PROVIDE(_edata = .);
     }
-    PROVIDE(_edata = .);
 
-    PROVIDE(_sbss = .);
     .bss : AT(ADDR(.bss) - KERNEL_VM_START)
     {
+        PROVIDE(_sbss = .);
         *(.bss);
+        PROVIDE(_ebss = .);
     }
-    PROVIDE(_ebss = .);
 }
