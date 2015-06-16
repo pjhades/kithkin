@@ -128,6 +128,8 @@ int vsprintk(char *str, const char *fmt, va_list va)
                 digits = tonum(temp, u64, 10);
                 goto setlength;
 
+            case 'P':
+                sign = 2;
             case 'X':
                 u64 = va_arg(va, uint64_t);
                 digits = tonum(temp, u64, 16);

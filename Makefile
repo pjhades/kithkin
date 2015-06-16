@@ -8,7 +8,7 @@ export INCLUDE := -I$(shell pwd)/include
 export CFLAGS  := -Wall -ffreestanding -c
 export LDFLAGS := -nostdlib
 
-DEPS := asm lib dev boot kernel
+DEPS := asm lib dev boot mm kernel
 
 .PHONY: all subdirs image
 

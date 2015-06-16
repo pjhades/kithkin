@@ -1,7 +1,8 @@
-SRCS = entry.S main.c
+SRCS := entry.S main.c
 OBJS := $(patsubst %.c, %.o, $(patsubst %.S, %.o, $(SRCS)))
 
-DEPOBJS = ../dev/console.o ../lib/lib.o ../asm/asm.o
+DEPOBJS = ../dev/console.o ../lib/lib.o ../asm/asm.o \
+		  ../mm/mm.o
 
 kernel.img: $(SRCS)
 	@echo "Compiling kernel ..."	

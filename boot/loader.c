@@ -6,6 +6,7 @@
 #include <kernel/ext2.h>
 #include <kernel/kerndata.h>
 
+#include <kernel/console.h>
 #define BUFSZ 1024
 
 static void *load_kernel(void) {
@@ -70,7 +71,7 @@ static void *load_kernel(void) {
     return (void *)elf.e_entry;
 }
 
-static void copy_kernel_data()
+static void copy_kernel_data(void)
 {
     char *dst = (char *)KERNEL_STARTUP_DATA;
 #define COPY(ptr, var, tag) \
@@ -94,6 +95,7 @@ void loader_main(void)
 {
     void *entry;
 
+    console_clear_screen();
     ata_init();
     if (!(entry = load_kernel())) {
         printk("Failed to load kernel\n");

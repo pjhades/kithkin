@@ -3,8 +3,7 @@
 
 #include <asm/mmu.h>
 
-#define KERNEL_VM_START 0xc0000000
-
+#define KERNEL_VM_START     0xc0000000
 #define KERNEL_STARTUP_DATA 0x106000
 
 #define PGDIR_SHIFT     22
@@ -21,6 +20,8 @@ struct gdt_ptr {
     uint16_t len;
     uint32_t ptr;
 } __attribute__((packed));
+
+void meminit(void);
 #endif
 
 #endif
