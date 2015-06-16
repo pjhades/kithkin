@@ -3,6 +3,15 @@
 
 #include <kernel/types.h>
 
+/* reference: http://wiki.osdev.org/Detecting_Memory_(x86) */
+enum {
+    E820_USABLE = 1,
+    E820_RESERVED,
+    E820_ACPI_RECLAIMABLE,
+    E820_ACPI_NVS,
+    E820_CONTAINING_BAD
+};
+
 struct mem_e820_entry {
     uint64_t base; 
     uint64_t len;

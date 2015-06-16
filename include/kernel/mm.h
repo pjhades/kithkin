@@ -11,8 +11,13 @@
 #define N_PTE_PER_PDE   1024
 #define N_USER_PDE      (KERNEL_VM_START >> PGDIR_SHIFT)
 #define N_KERNEL_PDE    (N_PDE - N_USER_PDE)
+#define PAGE_SHIFT      12
+#define PAGE_SIZE       (1 << PAGE_SHIFT)
 
 #ifndef __ASSEMBLER__
+#define pa_to_pfn(pa)  ((pa) >> PAGE_SHIFT)
+#define pfn_to_pa(pfn) ((pfn) << PAGE_SHIFT)
+
 typedef uint32_t pde_t;
 typedef uint32_t pte_t;
 
@@ -20,6 +25,8 @@ struct gdt_ptr {
     uint16_t len;
     uint32_t ptr;
 } __attribute__((packed));
+
+extern uint32_t minpfn, maxpfn;
 
 void meminit(void);
 #endif

@@ -8,6 +8,9 @@
 struct gdt_ptr gdtptr;
 struct mem_e820_map e820map;
 
+/* page frame number of the minimal/maximal usable physical page */
+uint32_t minpfn, maxpfn;
+
 static void get_kernel_data(void)
 {
     char *dst = (char *)KERNEL_STARTUP_DATA;
@@ -37,16 +40,30 @@ static void get_kernel_data(void)
     }
 }
 
-void scan_e820map(void)
+static void scan_e820map(void)
 {
     int i;
+    uint32_t end;
+
+    minpfn = 0xffffffff;
+    maxpfn = 0;
 
     for (i = 0; i < e820map.n_regions; i++) {
-        printk("base=%016X  len=%016X  type=%d\n",
-                e820map.regions[i].base,
-                e820map.regions[i].len,
-                e820map.regions[i].type);
+        printk("e820: range 0x%016X - 0x%016X, %s\n", e820map.regions[i].base,
+                e820map.regions[i].base + e820map.regions[i].len - 1,
+                e820map.regions[i].type == E820_USABLE ? "usable": "reserved");
+
+        if (e820map.regions[i].type != E820_USABLE)
+            continue;
+        end = e820map.regions[i].base + e820map.regions[i].len - 1;
+        if (minpfn < e820map.regions[i].base)
+            minpfn = e820map.regions[i].base;
+        if (end > maxpfn)
+            maxpfn = end;
     }
+    minpfn = pa_to_pfn(p2roundup(minpfn, PAGE_SIZE));
+    maxpfn = pa_to_pfn(p2rounddown(maxpfn, PAGE_SIZE));
+    printk("e820: minpfn = %p, maxpfn = %p\n", minpfn, maxpfn);
 }
 
 void meminit(void)
