@@ -66,6 +66,8 @@ static void scan_e820map(void)
         die("e820: no minimal usable memory above %x\n", MIN_PHYS);
     minpfn = phys_to_pfn(p2roundup(minpfn, PAGE_SIZE));
     maxpfn = phys_to_pfn(p2rounddown(maxpfn, PAGE_SIZE));
+    if (minpfn > maxpfn)
+        die("e820: no usable range found\n");
     printk("e820: minpfn = %p, maxpfn = %p\n", minpfn, maxpfn);
 }
 
