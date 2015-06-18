@@ -56,13 +56,16 @@ static void scan_e820map(void)
         if (e820map.regions[i].type != E820_USABLE)
             continue;
         end = e820map.regions[i].base + e820map.regions[i].len - 1;
-        if (minpfn < e820map.regions[i].base)
+        if (e820map.regions[i].base >= MIN_PHYS
+                && e820map.regions[i].base < minpfn)
             minpfn = e820map.regions[i].base;
         if (end > maxpfn)
             maxpfn = end;
     }
-    minpfn = pa_to_pfn(p2roundup(minpfn, PAGE_SIZE));
-    maxpfn = pa_to_pfn(p2rounddown(maxpfn, PAGE_SIZE));
+    if (minpfn == 0xffffffff)
+        die("e820: no minimal usable memory above %x\n", MIN_PHYS);
+    minpfn = phys_to_pfn(p2roundup(minpfn, PAGE_SIZE));
+    maxpfn = phys_to_pfn(p2rounddown(maxpfn, PAGE_SIZE));
     printk("e820: minpfn = %p, maxpfn = %p\n", minpfn, maxpfn);
 }
 
