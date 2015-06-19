@@ -17,7 +17,7 @@ _start:
     dec %ecx
     jmp 1b
 2:
-    movl $page_directory, %eax
+    movl $init_pagedir, %eax
     movl %eax, %cr3
     movl %cr0, %eax
     orl  $CR0_PG, %eax
@@ -35,8 +35,8 @@ _start:
 
 /* initial page directory at physical address 0x101000 */
 .org 0x1000
-.globl page_directory
-page_directory:
+.globl init_pagedir
+init_pagedir:
     .long 0x00102000 | PDE_P | PDE_RW | PDE_US
     .long 0x00103000 | PDE_P | PDE_RW | PDE_US
     .long 0x00104000 | PDE_P | PDE_RW | PDE_US
@@ -70,7 +70,12 @@ pgdir3:
 
 /* 4KB space holding data passed by loader */
 .org 0x6000
-.globl startup_data
-startup_data:
 
 .org 0x7000
+
+/* page directory */
+.section .bss
+.align PAGE_SIZE
+.globl pagedir
+pagedir:
+

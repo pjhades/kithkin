@@ -8,6 +8,8 @@
 struct gdt_ptr gdtptr;
 struct mem_e820_map e820map;
 
+struct page *mem_map;
+
 /* page frame number of the minimal/maximal usable physical page */
 uint32_t minpfn, maxpfn;
 
@@ -71,8 +73,17 @@ static void scan_e820map(void)
     printk("e820: minpfn = %p, maxpfn = %p\n", minpfn, maxpfn);
 }
 
+static void init_memmap(void)
+{
+    uint32_t size;
+
+    size = (maxpfn - minpfn + 1) * sizeof(struct page);
+    printk("size = %d\n", size);
+}
+
 void meminit(void)
 {
     get_kernel_data();
     scan_e820map();
+    init_memmap();
 }

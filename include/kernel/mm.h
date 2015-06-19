@@ -17,6 +17,7 @@
 
 
 #ifndef __ASSEMBLER__
+#include <list.h>
 
 #define MIN_PHYS 0x100000
 
@@ -32,6 +33,11 @@ struct gdt_ptr {
 } __attribute__((packed));
 
 extern uint32_t minpfn, maxpfn;
+
+struct page {
+    uint32_t flags;
+    struct list_node lru;
+};
 
 void meminit(void);
 #endif
