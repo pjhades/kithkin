@@ -49,8 +49,8 @@ static void *load_kernel(void) {
         if (phdr.p_type != PT_LOAD)
             continue;
 
-        if (phdr.p_vaddr >= KERNEL_VM_START)
-            phyaddr = phdr.p_vaddr - KERNEL_VM_START;
+        if (phdr.p_vaddr >= KERNEL_VIRT_START)
+            phyaddr = phdr.p_vaddr - KERNEL_VIRT_START;
         else
             phyaddr = phdr.p_vaddr;
 
@@ -84,11 +84,11 @@ static void copy_kernel_data(void)
         (ptr) += sizeof((var)); \
     } while (0)
 
-    COPY(dst, boot_gdt, KERNDATA_BOOTGDT);
-    COPY(dst, boot_gdtptr, KERNDATA_BOOTGDTPTR);
-    COPY(dst, e820map, KERNDATA_E820);
+    COPY(dst, boot_gdt,    BOOTDATA_BOOTGDT);
+    COPY(dst, boot_gdtptr, BOOTDATA_BOOTGDTPTR);
+    COPY(dst, e820map,     BOOTDATA_E820);
 #undef COPY
-    *((unsigned char *)dst) = KERNDATA_NONE;
+    *((unsigned char *)dst) = BOOTDATA_NONE;
 }
 
 void loader_main(void)

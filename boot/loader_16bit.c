@@ -127,11 +127,11 @@ static int detect_memory(void)
 
 uint64_t boot_gdt[N_BOOT_GDT_ENTRY] = {
     /* 0: null descriptor */
-    [0] = SEG_DESC(0x0, 0x0, 0x0),
+    [0] = seg_desc(0x0, 0x0, 0x0),
     /* 1: 32-bit read/executable code segment, 4k granularity, DPL 0 */
-    [BOOT_GDT_ENTRY_CODE] = SEG_DESC(0x0, 0xfffff, 0xc09a),
+    [BOOT_GDT_ENTRY_CODE] = seg_desc(0x0, 0xfffff, 0xc09a),
     /* 2: 32-bit read/write data segment, 4k granularity, DPL 0 */
-    [BOOT_GDT_ENTRY_DATA] = SEG_DESC(0x0, 0xfffff, 0xc092),
+    [BOOT_GDT_ENTRY_DATA] = seg_desc(0x0, 0xfffff, 0xc092),
 };
 
 struct gdt_ptr boot_gdtptr = {

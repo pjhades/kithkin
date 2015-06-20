@@ -20,19 +20,19 @@ static void get_kernel_data(void)
     uint32_t size;
 
     type = *((unsigned char *)dst);
-    while (type != KERNDATA_NONE) {
+    while (type != BOOTDATA_NONE) {
         dst += sizeof(unsigned char);
         size = *((uint32_t *)dst);
         dst += sizeof(uint32_t);
-        if (type == KERNDATA_BOOTGDT) {
+        if (type == BOOTDATA_BOOTGDT) {
             //TODO boot_gdt[] is not copied
             dst += sizeof(uint64_t) * N_BOOT_GDT_ENTRY;
         }
-        else if (type == KERNDATA_BOOTGDTPTR) {
+        else if (type == BOOTDATA_BOOTGDTPTR) {
             memcpy(&gdtptr, dst, size);
             dst += sizeof(struct gdt_ptr);
         }
-        else if (type == KERNDATA_E820) {
+        else if (type == BOOTDATA_E820) {
             memcpy(&e820map, dst, size);
             dst += sizeof(struct mem_e820_map);
         }
