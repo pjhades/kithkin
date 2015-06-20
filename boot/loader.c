@@ -73,7 +73,7 @@ static void *load_kernel(void) {
 
 static void copy_kernel_data(void)
 {
-    char *dst = (char *)KERNEL_STARTUP_DATA;
+    char *dst = (char *)KERNEL_BOOTDATA;
 #define COPY(ptr, var, tag) \
     do { \
         *((unsigned char *)(ptr)) = tag; \

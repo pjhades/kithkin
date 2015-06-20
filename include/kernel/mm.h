@@ -3,8 +3,8 @@
 
 #include <asm/mmu.h>
 
-#define KERNEL_VM_START     0xc0000000
-#define KERNEL_STARTUP_DATA 0x106000
+#define KERNEL_VM_START 0xc0000000
+#define KERNEL_BOOTDATA 0x00007e00
 
 #define N_PDE         1024
 #define N_PTE_PER_PDE 1024
@@ -15,14 +15,17 @@
 #define PAGE_SHIFT  12
 #define PAGE_SIZE   (1 << PAGE_SHIFT)
 
-
-#ifndef __ASSEMBLER__
-#include <list.h>
-
 #define MIN_PHYS 0x100000
 
 #define phys_to_pfn(pa)  ((pa) >> PAGE_SHIFT)
 #define pfn_to_phys(pfn) ((pfn) << PAGE_SHIFT)
+
+#define pa(addr) addr - KERNEL_VM_START
+
+
+#ifndef __ASSEMBLER__
+
+#include <list.h>
 
 typedef uint32_t pde_t;
 typedef uint32_t pte_t;
@@ -40,6 +43,7 @@ struct page {
 };
 
 void meminit(void);
+
 #endif
 
 #endif

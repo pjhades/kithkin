@@ -15,7 +15,7 @@ uint32_t minpfn, maxpfn;
 
 static void get_kernel_data(void)
 {
-    char *dst = (char *)KERNEL_STARTUP_DATA;
+    char *dst = (char *)KERNEL_BOOTDATA;
     unsigned char type;
     uint32_t size;
 

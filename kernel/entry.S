@@ -2,28 +2,61 @@
 
 .code32
 
+.macro set_pde addr, ptaddr
+    movl pa($\ptaddr), %eax
+    orl $(PDE_P | PDE_RW | PDE_US), %eax
+    movl pa($\addr), %edi
+    movl %eax, (%edi)
+.endm
+
+.macro set_empty_pde addr, count
+    movl $\count, %ecx
+    movl pa($\addr), %edi
+    xorl %eax, %eax
+1:
+    stosl
+    decl %ecx
+    test %ecx, %ecx
+    jnz 1b
+.endm
+
 .globl _start
 .section .text.entry
 _start:
-    /* fill the two page directory to map first 8MB memory */
-    movl $pgdir0, %edi
+    /* page tables mapping the lower part */
+    set_pde addr=init_pagedir,    ptaddr=pagetable0
+    set_pde addr=init_pagedir+4,  ptaddr=pagetable1
+    set_pde addr=init_pagedir+8,  ptaddr=pagetable2
+    set_pde addr=init_pagedir+12, ptaddr=pagetable3
+    /* empty */
+    set_empty_pde addr=init_pagedir+16, count=N_USER_PDE-4
+    /* page tables mapping the higher part */
+    set_pde addr=init_pagedir+N_USER_PDE*4,    ptaddr=pagetable0
+    set_pde addr=init_pagedir+N_USER_PDE*4+4,  ptaddr=pagetable1
+    set_pde addr=init_pagedir+N_USER_PDE*4+8,  ptaddr=pagetable2
+    set_pde addr=init_pagedir+N_USER_PDE*4+12, ptaddr=pagetable3
+    /* empty */
+    set_empty_pde addr=init_pagedir+N_USER_PDE*4+16, count=N_KERNEL_PDE-4
+
+    /* fill the page tables */
+    movl pa($pagetable0), %edi
     movl $(N_PTE_PER_PDE << 2), %ecx
     movl $(PTE_P | PTE_RW | PTE_US), %eax
-1:
+2:
     test %ecx, %ecx
-    jz 2f
+    jz 3f
     stosl
     addl $0x1000, %eax
-    dec %ecx
-    jmp 1b
-2:
-    movl $init_pagedir, %eax
+    decl %ecx
+    jmp 2b
+3:
+    movl pa($init_pagedir), %eax
     movl %eax, %cr3
     movl %cr0, %eax
     orl  $CR0_PG, %eax
     movl %eax, %cr0
-    jmp 3f
-3:
+    jmp 4f
+4:
     movl $kernel_main, %eax
     jmp *%eax
 
@@ -33,49 +66,29 @@ _start:
     movb %al, %ds:(0x0b8001)
     jmp .
 
-/* initial page directory at physical address 0x101000 */
-.org 0x1000
-.globl init_pagedir
-init_pagedir:
-    .long 0x00102000 | PDE_P | PDE_RW | PDE_US
-    .long 0x00103000 | PDE_P | PDE_RW | PDE_US
-    .long 0x00104000 | PDE_P | PDE_RW | PDE_US
-    .long 0x00105000 | PDE_P | PDE_RW | PDE_US
-    .fill N_USER_PDE - 4, 4, 0
-    .long 0x00102000 | PDE_P | PDE_RW | PDE_US
-    .long 0x00103000 | PDE_P | PDE_RW | PDE_US
-    .long 0x00104000 | PDE_P | PDE_RW | PDE_US
-    .long 0x00105000 | PDE_P | PDE_RW | PDE_US
-    .fill N_KERNEL_PDE - 4, 4, 0
 
-/* 1st: physical [0, 4MB) */
-.org 0x2000
-.globl pgdir0
-pgdir0:
-
-/* 2nd: physical [4, 8MB)*/
-.org 0x3000
-.globl pgdir1
-pgdir1:
-
-/* 3rd: physical [8, 12MB)*/
-.org 0x4000
-.globl pgdir2
-pgdir2:
-
-/* 4th: physical [12, 16MB)*/
-.org 0x5000
-.globl pgdir3
-pgdir3:
-
-/* 4KB space holding data passed by loader */
-.org 0x6000
-
-.org 0x7000
-
-/* page directory */
 .section .bss
 .align PAGE_SIZE
+.globl init_pagedir
+init_pagedir:
+    .fill 1024, 4, 0
+
+.globl pagetable0
+pagetable0:
+    .fill 1024, 4, 0
+
+.globl pagetable1
+pagetable1:
+    .fill 1024, 4, 0
+
+.globl pagetable2
+pagetable2:
+    .fill 1024, 4, 0
+
+.globl pagetable3
+pagetable3:
+    .fill 1024, 4, 0
+
 .globl pagedir
 pagedir:
 
