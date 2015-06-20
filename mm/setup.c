@@ -45,10 +45,11 @@ static void get_kernel_data(void)
 static void scan_e820map(void)
 {
     int i;
-    uint32_t end;
+    uint32_t maxsize;
 
     minpfn = 0xffffffff;
     maxpfn = 0;
+    maxsize = 0;
 
     for (i = 0; i < e820map.n_regions; i++) {
         printk("e820: range 0x%016X - 0x%016X, %s\n", e820map.regions[i].base,
@@ -57,14 +58,14 @@ static void scan_e820map(void)
 
         if (e820map.regions[i].type != E820_USABLE)
             continue;
-        end = e820map.regions[i].base + e820map.regions[i].len - 1;
-        if (e820map.regions[i].base >= MIN_PHYS
-                && e820map.regions[i].base < minpfn)
-            minpfn = e820map.regions[i].base;
-        if (end > maxpfn)
-            maxpfn = end;
+        if (e820map.regions[i].len < maxsize
+                || e820map.regions[i].base < MIN_PHYS)
+            continue;
+        minpfn = e820map.regions[i].base;
+        maxpfn = e820map.regions[i].base + e820map.regions[i].len - 1;
+        maxsize = e820map.regions[i].len;
     }
-    if (minpfn == 0xffffffff)
+    if (maxsize == 0)
         die("e820: no minimal usable memory above %x\n", MIN_PHYS);
     minpfn = phys_to_pfn(p2roundup(minpfn, PAGE_SIZE));
     maxpfn = phys_to_pfn(p2rounddown(maxpfn, PAGE_SIZE));
