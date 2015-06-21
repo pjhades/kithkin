@@ -16,4 +16,7 @@ int printk(const char *fmt, ...);
 #define p2roundup(x, y)   ((((x) - 1) | p2roundmask(x, y)) + 1)
 #define p2rounddown(x, y) ((x) & ~p2roundmask(x, y))
 
+#define max(x, y) ((x) > (y) ? (x) : (y))
+#define min(x, y) ((x) < (y) ? (x) : (y))
+
 #endif

@@ -16,15 +16,19 @@
 #define N_USER_PDE    (KERNEL_VIRT_START >> PAGEDIR_SHIFT)
 #define N_KERNEL_PDE  (N_PDE - N_USER_PDE)
 
+/* directly mapped 896MB */
+#define DIRECTMAP_PHYS_MAX 0xf8000000
+
+#define set_pde(addr, pde) *(addr) = (pde_t)(pde)
+#define set_pte(addr, pte) *(addr) = (pte_t)(pte)
+
 #define phys_to_pfn(pa)  ((pa) >> PAGE_SHIFT)
 #define pfn_to_phys(pfn) ((pfn) << PAGE_SHIFT)
 
-#define pa(addr) addr - KERNEL_VIRT_START
-
+#define phys(addr) ((uint32_t)(addr) - KERNEL_VIRT_START)
 
 #ifndef __ASSEMBLER__
-
-#include <list.h>
+extern uint32_t minpfn, maxpfn;
 
 typedef uint32_t pde_t;
 typedef uint32_t pte_t;
@@ -33,13 +37,6 @@ struct gdt_ptr {
     uint16_t len;
     uint32_t ptr;
 } __attribute__((packed));
-
-extern uint32_t minpfn, maxpfn;
-
-struct page {
-    uint32_t flags;
-    struct list_node lru;
-};
 
 void meminit(void);
 

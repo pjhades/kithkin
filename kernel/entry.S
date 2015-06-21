@@ -1,5 +1,7 @@
 #include <kernel/mm.h>
 
+#define pa(addr) addr - KERNEL_VIRT_START
+
 .code32
 
 .macro set_pde addr, ptaddr
@@ -91,4 +93,5 @@ pagetable3:
 
 .globl pagedir
 pagedir:
+    .fill 1024, 4, 0
 

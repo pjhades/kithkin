@@ -74,16 +74,56 @@ static void scan_e820map(void)
     printk("e820: minpfn = %p, maxpfn = %p\n", minpfn, maxpfn);
 }
 
+static void load_pagetable(pde_t *pagedir)
+{
+    asm volatile (
+            "movl %0, %%cr3\n\t"
+            :
+            :"a"(pagedir)
+            :"memory"
+            );
+}
+
+//static void *raw_alloc(uint32_t size)
+//{
+//}
+
 static void init_memmap(void)
 {
-    uint32_t size;
+    extern char pagedir[];
+    pde_t *pde;
+    pte_t *pte;
+    uint32_t pfn, end, pde_max, pte_max;
+    int pde_idx;
 
-    size = (maxpfn - minpfn + 1) * sizeof(struct page);
-    printk("size = %d\n", size);
+    pde = (pde_t *)pagedir;
+    pte = (pte_t *)(pde + N_PDE * sizeof(pde_t));
+    pfn = 0;
+
+    memset((void *)phys(pagedir), 0, sizeof(pde_t) * N_PDE);
+
+    /* maximum directly mapped PDE and PTE index */
+    pte_max = min(maxpfn, phys_to_pfn(DIRECTMAP_PHYS_MAX));
+    pde_max = pte_max >> (PAGEDIR_SHIFT - PAGE_SHIFT);
+
+    for (pde_idx = 0; pde_idx <= pde_max; pde_idx++, pde++) {
+        set_pde(pde, phys(pte) | PDE_P | PDE_RW | PDE_US);
+
+        memset((void *)phys(pte), 0, sizeof(pte_t) * N_PTE_PER_PDE);
+
+        end = (pde_idx + 1) * N_PTE_PER_PDE - 1;
+        for (; pfn <= min(pte_max, end); pfn++, pte++)
+            set_pte(pte, (pfn << PAGE_SHIFT) | PTE_P | PTE_RW | PTE_US);
+    }
+
+    memcpy((void *)phys(pagedir) + sizeof(pde_t) * N_USER_PDE,
+           (void *)phys(pagedir), sizeof(pde_t) * pde_max);
+    load_pagetable((pde_t *)phys(pagedir));
 }
 
 void meminit(void)
 {
+    //init_easyalloc();
     get_kernel_data();
     scan_e820map();
     init_memmap();
