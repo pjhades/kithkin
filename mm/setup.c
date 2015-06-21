@@ -123,8 +123,8 @@ static void init_memmap(void)
 
 void meminit(void)
 {
-    //init_easyalloc();
     get_kernel_data();
     scan_e820map();
+    //init_easyalloc();
     init_memmap();
 }

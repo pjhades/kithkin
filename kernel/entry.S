@@ -28,21 +28,17 @@ _start:
     /* page tables mapping the lower part */
     set_pde addr=init_pagedir,    ptaddr=pagetable0
     set_pde addr=init_pagedir+4,  ptaddr=pagetable1
-    set_pde addr=init_pagedir+8,  ptaddr=pagetable2
-    set_pde addr=init_pagedir+12, ptaddr=pagetable3
     /* empty */
-    set_empty_pde addr=init_pagedir+16, count=N_USER_PDE-4
+    set_empty_pde addr=init_pagedir+8, count=N_USER_PDE-2
     /* page tables mapping the higher part */
     set_pde addr=init_pagedir+N_USER_PDE*4,    ptaddr=pagetable0
     set_pde addr=init_pagedir+N_USER_PDE*4+4,  ptaddr=pagetable1
-    set_pde addr=init_pagedir+N_USER_PDE*4+8,  ptaddr=pagetable2
-    set_pde addr=init_pagedir+N_USER_PDE*4+12, ptaddr=pagetable3
     /* empty */
-    set_empty_pde addr=init_pagedir+N_USER_PDE*4+16, count=N_KERNEL_PDE-4
+    set_empty_pde addr=init_pagedir+N_USER_PDE*4+8, count=N_KERNEL_PDE-2
 
     /* fill the page tables */
     movl pa($pagetable0), %edi
-    movl $(N_PTE_PER_PDE << 2), %ecx
+    movl $(N_PTE_PER_PDE << 1), %ecx
     movl $(PTE_P | PTE_RW | PTE_US), %eax
 2:
     test %ecx, %ecx
@@ -81,14 +77,6 @@ pagetable0:
 
 .globl pagetable1
 pagetable1:
-    .fill 1024, 4, 0
-
-.globl pagetable2
-pagetable2:
-    .fill 1024, 4, 0
-
-.globl pagetable3
-pagetable3:
     .fill 1024, 4, 0
 
 .globl pagedir

@@ -10,7 +10,7 @@
        +--- +-----------------------------+ min(maxpfn, phys_to_pfn(DIRECTMAP_PHYS_MAX))
        |    |                             |
        |    |                             |
-       |    |                             | <----- end of hardcoded initial
+       |    |                             | <----- end of hardcoded 8MB initial
        |    |     managed by easyalloc    |        mapping in kernel/entry.S
        |    |                             |
             +-----------------------------+
