@@ -27,3 +27,23 @@
        |    |                             |
        +--- +-----------------------------+ 0
 
+
+
+#Test
+##Test is mapping is set up correctly
+Read the first byte of each physical page and see if #GP triggers:
+
+```C
+    char byte;
+    for (pfn = minpfn; pfn <= pte_max; pfn++) {
+        byte = *((char *)(pfn << PAGE_SHIFT));
+        byte += 0; /* eliminate compiler warning */
+        printk("physical page %d/%d ok\n", pfn, pte_max);
+    }
+
+    /* bad: not mapped page */
+    byte = *((char *)((pte_max + 1) << PAGE_SHIFT));
+
+    /* ok: last byte of the last mapped page */
+    byte = *((char *)((pte_max + 1) << PAGE_SHIFT) - 1);
+```
