@@ -2,7 +2,7 @@
 #include <asm/e820.h>
 #include <kernel/types.h>
 #include <kernel/kernel.h>
-#include <kernel/kerndata.h>
+#include <kernel/bootdata.h>
 #include <kernel/mm.h>
 
 struct gdt_ptr gdtptr;
