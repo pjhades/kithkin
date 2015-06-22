@@ -25,10 +25,11 @@
 #define phys_to_pfn(pa)  ((pa) >> PAGE_SHIFT)
 #define pfn_to_phys(pfn) ((pfn) << PAGE_SHIFT)
 
-#define pfn_up(pa) (((pa) + PAGE_SIZE - 1) >> PAGE_SHIFT)
+#define pfn_up(pa) (((uint32_t)(pa) + PAGE_SIZE - 1) >> PAGE_SHIFT)
 #define pfn_down(pa) ((pa) >> PAGE_SHIFT)
 
 #define phys(addr) ((uint32_t)(addr) - KERNEL_VIRT_START)
+#define virt(addr) ((uint32_t)(addr) + KERNEL_VIRT_START)
 
 
 #ifndef __ASSEMBLER__

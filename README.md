@@ -10,11 +10,15 @@
        +--- +-----------------------------+ min(maxpfn, phys_to_pfn(DIRECTMAP_PHYS_MAX))
        |    |                             |
        |    |                             |
-       |    |                             | <----- end of hardcoded 8MB initial
-       |    |     managed by easyalloc    |        mapping in kernel/entry.S
+       |    |                             | <----- end of hardcoded 8MB initial mapping in kernel/entry.S
        |    |                             |
-            +-----------------------------+
-    direct  |      easyalloc bitmap       |
+       |    |                             |
+       |    |     managed by bootmem      |
+       |    |                             |
+       |    +-----------------------------+ <----- pfn_up((pfn_up(_end) << PAGE_SHIFT) + bdata.size);
+            |                             |        make enough room for the bitmap
+    direct  |      bootmem bitmap         |
+            +_____________________________+ <----- pfn_up(_end) aligned by page
     mapping |                             |
     area    +-----------------------------+ _end
             |                             |

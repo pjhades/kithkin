@@ -4,6 +4,7 @@
 #include <kernel/kernel.h>
 #include <kernel/bootdata.h>
 #include <kernel/mm.h>
+#include <kernel/alloc.h>
 
 struct gdt_ptr gdtptr;
 struct mem_e820_map e820map;
@@ -71,7 +72,7 @@ static void scan_e820map(void)
     maxpfn = pfn_down(maxpfn);
     if (minpfn > maxpfn)
         die("e820: no usable range found\n");
-    printk("e820: minpfn = %p, maxpfn = %p\n", minpfn, maxpfn);
+    printk("e820: minpfn=%p, maxpfn=%p\n", minpfn, maxpfn);
 }
 
 static void load_pagetable(pde_t *pagedir)
@@ -125,6 +126,6 @@ void meminit(void)
 {
     get_kernel_data();
     scan_e820map();
-    //init_easyalloc();
+    init_bootmem();
     init_memmap();
 }
