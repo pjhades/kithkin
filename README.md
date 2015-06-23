@@ -10,19 +10,19 @@
        +--- +----------------------+ min(maxpfn, phys_to_pfn(DIRECTMAP_PHYS_MAX))
        |    |                      |
        |    |                      |
-       |    |                      | <--- end of hardcoded 8MB initial
+       |    |                      | <-- end of hardcoded 8MB initial
 	   |    |                      |      mapping in kernel/entry.S
        |    |                      |
        |    |  managed by bootmem  |
        |    |                      |
-       |    +----------------------+ <--- pfn_up((pfn_up(_end) << PAGE_SHIFT) + bdata.size);
+       |    +----------------------+ <-- pfn_up((pfn_up(_end) << PAGE_SHIFT) + bdata.size);
             |                      |      make enough room for the bitmap
     direct  |   bootmem bitmap     |
-            +______________________+ <--- pfn_up(_end) aligned by page
+            +______________________+ <-- pfn_up(_end) aligned by page
     mapping |                      |
     area    +----------------------+ _end
             |                      |
-       |    |                      | <--- initial mapping page tables
+       |    |                      | <-- initial mapping page tables
        |    |                      |        in .bss section
        |    |   kernel image       |
        |    |                      |
@@ -34,7 +34,7 @@
 
 
 #Test
-##Test is mapping is set up correctly
+##Test if mapping is set up correctly
 Read the first byte of each physical page and see if #GP triggers:
 
 ```C
