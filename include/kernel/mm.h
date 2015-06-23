@@ -11,6 +11,7 @@
 #define PAGEDIR_SHIFT 22
 #define PAGE_SHIFT    12
 #define PAGE_SIZE     (1 << PAGE_SHIFT)
+#define PAGE_MASK     (PAGE_SIZE - 1)
 #define N_PDE         1024
 #define N_PTE_PER_PDE 1024
 #define N_USER_PDE    (KERNEL_VIRT_START >> PAGEDIR_SHIFT)
@@ -26,7 +27,7 @@
 #define pfn_to_phys(pfn) ((pfn) << PAGE_SHIFT)
 
 #define pfn_up(pa) (((uint32_t)(pa) + PAGE_SIZE - 1) >> PAGE_SHIFT)
-#define pfn_down(pa) ((pa) >> PAGE_SHIFT)
+#define pfn_down(pa) ((uint32_t)(pa) >> PAGE_SHIFT)
 
 #define phys(addr) ((uint32_t)(addr) - KERNEL_VIRT_START)
 #define virt(addr) ((uint32_t)(addr) + KERNEL_VIRT_START)

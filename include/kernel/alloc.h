@@ -4,10 +4,10 @@
 #include <kernel/types.h>
 
 struct bootmem_data {
-    char *bitmap;
-    uint32_t size;
-    char *last;
-    uint32_t lastpfn;
+    char *bitmap;     /* usable or reserved */
+    uint32_t size;    /* bitmap size */
+    void *last;       /* continue next allocation from here ... */
+    uint32_t lastpfn; /* ... and this page frame */
 };
 
 #define bootmem_mark_usable(bdata, pfn) \
@@ -16,5 +16,6 @@ struct bootmem_data {
     bdata.bitmap[pfn>>3] &= ~(1 << (pfn & 7))
 
 void init_bootmem(void);
+void *bootmem_alloc(uint32_t size);
 
 #endif
