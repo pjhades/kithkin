@@ -10,13 +10,6 @@ struct bootmem_data {
     uint32_t lastpfn;      /* ... and this page frame */
 };
 
-/*
-#define bootmem_mark_usable(bdata, pfn) \
-    bdata.bitmap[pfn>>3] &= ~(1 << (pfn & 7))
-#define bootmem_mark_reserved(bdata, pfn) \
-    bdata.bitmap[pfn>>3] |= (1 << (pfn & 7))
-    */
-
 void init_bootmem(void);
 void *bootmem_alloc(uint32_t size);
 
