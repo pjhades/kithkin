@@ -5,7 +5,7 @@ export AS      := $(PREFIX)as
 export LD      := $(PREFIX)ld
 export OBJCOPY := $(PREFIX)objcopy
 export INCLUDE := -I$(shell pwd)/include
-export CFLAGS  := -Wall -ffreestanding -c
+export CFLAGS  := -Wall -ffreestanding -c -g
 export LDFLAGS := -nostdlib
 
 DEPS := asm lib dev boot mm kernel

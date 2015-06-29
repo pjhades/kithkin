@@ -259,7 +259,9 @@ ssize_t loader_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode,
             if (help.count >= total)
                 return total;
         }
-        return help.count;
+        /* not finished, continue with indirect blocks */
+        help.index[0] = 0;
+        goto indirect;
     }
 
     fileblock -= EXT2_N_DIRECT_BLK_PTR;

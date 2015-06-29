@@ -2,7 +2,7 @@
 #include <kernel/types.h>
 #include <kernel/console.h>
 
-static struct console_device console;
+struct console_device console;
 
 static void console_set_cursor(void)
 {
@@ -23,7 +23,7 @@ static void console_scroll(void)
         for (j = 0; j < CONSOLE_COLS; j++)
             video[i - 1][j] = video[i][j];
     for (j = 0; j < CONSOLE_COLS; j++)
-        video[CONSOLE_ROWS - 1][j] = 0;
+        video[CONSOLE_ROWS - 1][j] = (0x07 << 8) | ' ';
     console.row = CONSOLE_ROWS - 1;
     console.col = 0;
     console_set_cursor();
@@ -51,11 +51,12 @@ void console_clear_screen(void)
 
     console_mem_ptr_t video = (console_mem_ptr_t)CONSOLE_MEM_DATA;
 
-    console.row = 0;
-    console.col = 0;
     for (i = 0; i < CONSOLE_ROWS; i++)
         for (j = 0; j < CONSOLE_COLS; j++)
             video[i][j] = 0x07<<8;
+    console.row = 0;
+    console.col = 0;
+    console_set_cursor();
 }
 
 void cputchar(char ch)

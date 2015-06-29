@@ -85,10 +85,6 @@ static void load_pagetable(pde_t *pagedir)
             );
 }
 
-//static void *raw_alloc(uint32_t size)
-//{
-//}
-
 static void init_memmap(void)
 {
     extern char pagedir[];
@@ -127,5 +123,6 @@ void meminit(void)
     get_kernel_data();
     scan_e820map();
     init_bootmem();
-    init_memmap();
+
+    //init_memmap();
 }
