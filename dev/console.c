@@ -2,7 +2,7 @@
 #include <kernel/types.h>
 #include <kernel/console.h>
 
-struct console_device console;
+extern struct console_device console;
 
 static void console_set_cursor(void)
 {
@@ -17,13 +17,12 @@ static void console_set_cursor(void)
 static void console_scroll(void)
 {
     int i, j;
-    console_mem_ptr_t video = (console_mem_ptr_t)CONSOLE_MEM_DATA;
 
     for (i = 1; i < CONSOLE_ROWS; i++)
         for (j = 0; j < CONSOLE_COLS; j++)
-            video[i - 1][j] = video[i][j];
+            console.mem[i - 1][j] = console.mem[i][j];
     for (j = 0; j < CONSOLE_COLS; j++)
-        video[CONSOLE_ROWS - 1][j] = (0x07 << 8) | ' ';
+        console.mem[CONSOLE_ROWS - 1][j] = (0x07 << 8) | ' ';
     console.row = CONSOLE_ROWS - 1;
     console.col = 0;
     console_set_cursor();
@@ -49,20 +48,22 @@ void console_clear_screen(void)
 {
     int i, j;
 
-    console_mem_ptr_t video = (console_mem_ptr_t)CONSOLE_MEM_DATA;
-
     for (i = 0; i < CONSOLE_ROWS; i++)
         for (j = 0; j < CONSOLE_COLS; j++)
-            video[i][j] = 0x07<<8;
+            console.mem[i][j] = 0x07<<8;
     console.row = 0;
     console.col = 0;
     console_set_cursor();
 }
 
+void console_init(uint32_t mem)
+{
+    console.mem = (console_mem_ptr_t)mem;
+    console_clear_screen();
+}
+
 void cputchar(char ch)
 {
-    console_mem_ptr_t video = (console_mem_ptr_t)CONSOLE_MEM_DATA;
-
     switch (ch) {
         case ' ':
             console_add_col();
@@ -76,7 +77,7 @@ void cputchar(char ch)
             console_set_cursor();
             break;
         default:
-            video[console.row][console.col] = (0x07 << 8) | ch;
+            console.mem[console.row][console.col] = (0x07 << 8) | ch;
             console_add_col();
             break;
     }

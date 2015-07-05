@@ -90,31 +90,31 @@ static void init_memmap(void)
     extern char pagedir[];
     pde_t *pde;
     pte_t *pte;
-    uint32_t pfn, end, pde_max, pte_max;
-    int pde_idx;
+    uint32_t pde_start, pde_end, pte_start, pte_end;
+    int pde_idx, pte_idx, count;
 
-    pde = (pde_t *)pagedir;
-    pte = (pte_t *)(pde + N_PDE * sizeof(pde_t));
-    pfn = 0;
+    pte_start = phys_to_pfn(phys(KERNEL_VIRT_START));
+    pte_end = min(maxpfn, phys_to_pfn(DIRECTMAP_PHYS_MAX));
 
-    memset((void *)phys(pagedir), 0, sizeof(pde_t) * N_PDE);
+    pde_start = KERNEL_VIRT_START >> PAGEDIR_SHIFT;
+    pde_end = virt(min(pfn_to_phys(maxpfn), DIRECTMAP_PHYS_MAX))
+              >> PAGEDIR_SHIFT;
 
-    /* maximum directly mapped PDE and PTE index */
-    pte_max = min(maxpfn, phys_to_pfn(DIRECTMAP_PHYS_MAX));
-    pde_max = pte_max >> (PAGEDIR_SHIFT - PAGE_SHIFT);
+    pte_idx = pte_start;
+    for (pde_idx = pde_start; pde_idx <= pde_end; pde_idx++, pde++) {
+        pde = (pde_t *)pagedir + pde_idx;
+        pte = bootmem_alloc(N_PTE_PER_PDE * sizeof(pte_t));
 
-    for (pde_idx = 0; pde_idx <= pde_max; pde_idx++, pde++) {
-        set_pde(pde, phys(pte) | PDE_P | PDE_RW | PDE_US);
+        memset((void *)phys(pte), 0, N_PTE_PER_PDE * sizeof(pte_t));
 
-        memset((void *)phys(pte), 0, sizeof(pte_t) * N_PTE_PER_PDE);
+        set_pde(phys(pde), phys(pte) | PDE_P | PDE_RW | PDE_US);
 
-        end = (pde_idx + 1) * N_PTE_PER_PDE - 1;
-        for (; pfn <= min(pte_max, end); pfn++, pte++)
-            set_pte(pte, (pfn << PAGE_SHIFT) | PTE_P | PTE_RW | PTE_US);
+        count = 0;
+        for (; pte_idx <= pte_end && count < N_PTE_PER_PDE;
+               pte_idx++, pte++, count++)
+            set_pte(phys(pte), pfn_to_phys(pte_idx) | PTE_P | PTE_RW | PTE_US);
     }
 
-    memcpy((void *)phys(pagedir) + sizeof(pde_t) * N_USER_PDE,
-           (void *)phys(pagedir), sizeof(pde_t) * pde_max);
     load_pagetable((pde_t *)phys(pagedir));
 }
 
@@ -123,6 +123,5 @@ void meminit(void)
     get_kernel_data();
     scan_e820map();
     init_bootmem();
-
-    //init_memmap();
+    init_memmap();
 }

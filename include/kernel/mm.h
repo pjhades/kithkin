@@ -18,10 +18,10 @@
 #define N_KERNEL_PDE  (N_PDE - N_USER_PDE)
 
 /* directly mapped 896MB */
-#define DIRECTMAP_PHYS_MAX 0xf8000000
+#define DIRECTMAP_PHYS_MAX 0x38000000
 
-#define set_pde(addr, pde) *(addr) = (pde_t)(pde)
-#define set_pte(addr, pte) *(addr) = (pte_t)(pte)
+#define set_pde(addr, pde) *((pde_t *)addr) = (pde_t)(pde)
+#define set_pte(addr, pte) *((pte_t *)addr) = (pte_t)(pte)
 
 #define phys_to_pfn(pa)  ((pa) >> PAGE_SHIFT)
 #define pfn_to_phys(pfn) ((pfn) << PAGE_SHIFT)

@@ -5,11 +5,12 @@
 #include <kernel/ide.h>
 #include <kernel/ext2.h>
 #include <kernel/bootdata.h>
-
 #include <kernel/console.h>
+
 #define BUFSZ 1024
 
-static void *load_kernel(void) {
+static void *load_kernel(void)
+{
     int i, ret, sz, loadsz;
     uint8_t *addr, buf[BUFSZ];
     uint32_t phdr_off, phyaddr;
@@ -91,11 +92,13 @@ static void copy_kernel_data(void)
     *((unsigned char *)dst) = BOOTDATA_NONE;
 }
 
+struct console_device console;
+
 void loader_main(void)
 {
     void *entry;
 
-    console_clear_screen();
+    console_init(CONSOLE_MEM_DATA);
     ata_init();
     if (!(entry = load_kernel())) {
         printk("Failed to load kernel\n");

@@ -25,6 +25,9 @@
 .globl _start
 .section .text.entry
 _start:
+    movl $pagedir, %esp
+    decl %esp
+
     /* page tables mapping the lower part */
     set_pde addr=init_pagedir,    ptaddr=pagetable0
     set_pde addr=init_pagedir+4,  ptaddr=pagetable1
@@ -78,6 +81,10 @@ pagetable0:
 .globl pagetable1
 pagetable1:
     .fill 1024, 4, 0
+
+.globl stack
+stack:
+    .fill 2048, 4, 0
 
 .globl pagedir
 pagedir:
