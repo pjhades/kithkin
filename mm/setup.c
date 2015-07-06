@@ -8,6 +8,7 @@
 
 struct gdt_ptr gdtptr;
 struct mem_e820_map e820map;
+uint64_t boot_gdt[N_BOOT_GDT_ENTRY];
 
 struct page *mem_map;
 
@@ -25,8 +26,9 @@ static void get_kernel_data(void)
         dst += sizeof(unsigned char);
         size = *((uint32_t *)dst);
         dst += sizeof(uint32_t);
+
         if (type == BOOTDATA_BOOTGDT) {
-            //TODO boot_gdt[] is not copied
+            memcpy(boot_gdt, dst, size);
             dst += sizeof(uint64_t) * N_BOOT_GDT_ENTRY;
         }
         else if (type == BOOTDATA_BOOTGDTPTR) {
@@ -39,6 +41,7 @@ static void get_kernel_data(void)
         }
         else
             die("Unknown kernel data type: %x\n", type);
+
         type = *((unsigned char *)dst);
     }
 }
@@ -66,12 +69,16 @@ static void scan_e820map(void)
         maxpfn = e820map.regions[i].base + e820map.regions[i].len - 1;
         maxsize = e820map.regions[i].len;
     }
+
     if (maxsize == 0)
         die("e820: no minimal usable memory above %x\n", MIN_PHYS);
+
     minpfn = pfn_up(minpfn);
     maxpfn = pfn_down(maxpfn);
+
     if (minpfn > maxpfn)
         die("e820: no usable range found\n");
+
     printk("e820: minpfn=%p, maxpfn=%p\n", minpfn, maxpfn);
 }
 
