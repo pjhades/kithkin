@@ -41,4 +41,11 @@
 #define CR0_PM  0x1
 #define CR0_PG  0x80000000
 
+#ifndef __ASSEMBLER__
+struct gdt_ptr {
+    u16 len;
+    u32 ptr;
+} __attribute__((packed));
+#endif
+
 #endif

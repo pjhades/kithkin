@@ -1,11 +1,11 @@
 #include <string.h>
 #include <elf.h>
+#include <ide.h>
+#include <console.h>
 #include <kernel/types.h>
 #include <kernel/kernel.h>
-#include <kernel/ide.h>
 #include <kernel/ext2.h>
 #include <kernel/bootdata.h>
-#include <kernel/console.h>
 
 #define BUFSZ 1024
 

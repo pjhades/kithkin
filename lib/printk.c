@@ -1,5 +1,5 @@
 #include <stdarg.h>
-#include <kernel/console.h>
+#include <console.h>
 #include <kernel/types.h>
 
 #define isdigit(x) ((x) >= '0' && (x) <= '9')

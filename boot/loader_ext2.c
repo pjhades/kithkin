@@ -1,8 +1,7 @@
 #include <kernel/types.h>
 #include <kernel/kernel.h>
 #include <kernel/ext2.h>
-#include <kernel/ide.h>
-#include <kernel/console.h>
+#include <ide.h>
 #include <string.h>
 
 static int loader_ext2_read_block(struct ext2_fsinfo *fs, u32 blkid,

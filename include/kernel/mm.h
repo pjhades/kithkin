@@ -42,11 +42,6 @@ extern u32 minpfn, maxpfn;
 typedef u32 pde_t;
 typedef u32 pte_t;
 
-struct gdt_ptr {
-    u16 len;
-    u32 ptr;
-} __attribute__((packed));
-
 void meminit(void);
 
 #endif

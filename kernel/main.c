@@ -1,6 +1,6 @@
+#include <console.h>
 #include <kernel/kernel.h>
 #include <kernel/types.h>
-#include <kernel/console.h>
 #include <kernel/mm.h>
 
 struct console_device console;

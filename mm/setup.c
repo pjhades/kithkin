@@ -128,10 +128,15 @@ static void init_memmap(void)
     load_pagetable((pde_t *)phys(pagedir));
 }
 
+void init_pages(void)
+{
+}
+
 void meminit(void)
 {
     get_kernel_data();
     scan_e820map();
     init_bootmem();
     init_memmap();
+    init_pages();
 }

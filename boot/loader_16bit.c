@@ -2,7 +2,6 @@
 #include <asm/x86.h>
 #include <asm/e820.h>
 #include <asm/mmu.h>
-#include <kernel/mm.h>
 #include <kernel/types.h>
 
 asm (".code16gcc\n");
