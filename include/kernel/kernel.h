@@ -8,14 +8,14 @@ int printk(const char *fmt, ...);
 
 #define die(fmt, ...) \
     do { \
-        printk((fmt), ##__VA_ARGS__); \
+        printk("Die at %s:%d, " fmt, __FILE__, __LINE__, ##__VA_ARGS__); \
         while (1); \
     } while (0)
 
 #define assert(cond) \
     do { \
         if (!(cond)) \
-            die("assertion failed: %s in %s:%d\n", #cond, __FILE__, __LINE__); \
+            die("assertion failed: %s\n", #cond); \
     } while (0)
 
 

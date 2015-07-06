@@ -4,7 +4,7 @@
 #include <kernel/kernel.h>
 #include <kernel/bootdata.h>
 #include <kernel/mm.h>
-#include <kernel/alloc.h>
+#include <kernel/bootmem.h>
 
 struct gdt_ptr gdtptr;
 struct mem_e820_map e820map;
@@ -95,7 +95,7 @@ static void load_pagetable(pde_t *pagedir)
             );
 }
 
-static void init_memmap(void)
+static void init_mapping(void)
 {
     extern char pagedir[];
     pde_t *pde;
@@ -126,10 +126,17 @@ static void init_memmap(void)
     }
 
     load_pagetable((pde_t *)phys(pagedir));
+
 }
 
-void init_pages(void)
+static void init_pages(void)
 {
+    int size;
+
+    size = (maxpfn - minpfn + 1) * sizeof(struct page);
+    mem_map = bootmem_alloc(size);
+
+    printk("allocated %d bytes for %d pages\n", size, (maxpfn - minpfn + 1));
 }
 
 void meminit(void)
@@ -137,6 +144,6 @@ void meminit(void)
     get_kernel_data();
     scan_e820map();
     init_bootmem();
-    init_memmap();
+    init_mapping();
     init_pages();
 }

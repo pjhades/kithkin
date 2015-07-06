@@ -35,12 +35,20 @@
 #define phys(addr) ((u32)(addr) - KERNEL_VIRT_START)
 #define virt(addr) ((u32)(addr) + KERNEL_VIRT_START)
 
+#define pfn_to_page(pfn) &mem_map[(pfn) - minpfn]
+#define page_to_pfn(page) ((page) - mem_map + minpfn)
+
 
 #ifndef __ASSEMBLER__
+#include <list.h>
 extern u32 minpfn, maxpfn;
 
 typedef u32 pde_t;
 typedef u32 pte_t;
+
+struct page {
+    struct list_node lru;
+};
 
 void meminit(void);
 

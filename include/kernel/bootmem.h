@@ -1,5 +1,5 @@
-#ifndef __ALLOC_H__
-#define __ALLOC_H__
+#ifndef __BOOTMEM_H__
+#define __BOOTMEM_H__
 
 #include <kernel/types.h>
 

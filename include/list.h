@@ -18,7 +18,7 @@ struct list_node {
     struct list_node *prev;
 };
 
-#define list_node_initialize(head) { &(head), &(head) }
+#define list_node_initializer(head) { &(head), &(head) }
 
 #define list_init(head)        \
     do {                       \

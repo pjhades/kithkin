@@ -1,5 +1,5 @@
 #include <string.h>
-#include <kernel/alloc.h>
+#include <kernel/bootmem.h>
 #include <kernel/mm.h>
 #include <kernel/kernel.h>
 
@@ -27,6 +27,7 @@ void init_bootmem(void)
     /* start allocation from the page after the bitmap */
     bdata.lastpfn = pfn_up((pfn_up(phys(_end)) << PAGE_SHIFT) + bdata.size);
     bdata.last = (void *)virt(bdata.lastpfn << PAGE_SHIFT);
+
     printk("bootmem: _end=%p\n"
            "bootmem: bitmap=%p, size=%x, lastpfn=%x, last=%p\n",
            _end, bdata.bitmap, bdata.size, bdata.lastpfn, bdata.last);
@@ -44,15 +45,15 @@ void init_bootmem(void)
 
 void *bootmem_alloc(u32 size)
 {
-    void *ret;
+    void *ret = NULL;
     int n_page, i;
-    u32 pfn, bytes;
+    u32 pfn, bytes, n;
 
     if (size >= PAGE_SIZE) {
         n_page = (size + PAGE_SIZE - 1) >> PAGE_SHIFT;
         if (bdata.lastpfn + n_page - 1 > maxpfn)
-            die("bootmem: cannot allocate %d pages. last=%p, lastpfn=%x\n",
-                    n_page, bdata.last, bdata.lastpfn);
+            die("cannot afford %d pages, "
+                "last=%p, lastpfn=%x\n", n_page, bdata.last, bdata.lastpfn);
 
         /* bytes used in last page */
         bytes = size & PAGE_MASK;
@@ -66,20 +67,26 @@ void *bootmem_alloc(u32 size)
 
         for (i = 0; i < n_page - 1; i++, pfn++)
             bootmem_mark_reserved(&bdata, pfn);
+
         /* mark last page if required size is a multiple of pages */
         if (bytes == 0) {
             bootmem_mark_reserved(&bdata, pfn);
             pfn++;
         }
+
         bdata.lastpfn = pfn;
         bdata.last = (void *)virt((pfn << PAGE_SHIFT) + bytes);
 
+        if (!ret)
+            die("failed allocating %d pages\n", n_page);
         return ret;
     }
 
     /* bytes left in current page */
+    n = size;
     ret = bdata.last;
     bytes = PAGE_SIZE - (phys(bdata.last) - (bdata.lastpfn << PAGE_SHIFT));
+
     if (size >= bytes) {
         size -= bytes;
         bootmem_mark_reserved(&bdata, bdata.lastpfn);
@@ -88,6 +95,8 @@ void *bootmem_alloc(u32 size)
     }
     bdata.last += size;
 
+    if (!ret)
+        die("failed allocating %d bytes\n", n);
     return ret;
 }
 
