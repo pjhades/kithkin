@@ -12,18 +12,18 @@
 #define CONSOLE_ROWS      25
 #define CONSOLE_COLS      80
 
-typedef uint16_t (*console_mem_ptr_t)[CONSOLE_COLS];
+typedef u16 (*console_mem_ptr_t)[CONSOLE_COLS];
 
 struct console_device {
     console_mem_ptr_t mem;
-    uint8_t row;
-    uint8_t col;
+    u8 row;
+    u8 col;
 };
 
 void console_clear_screen(void);
-void console_init(uint32_t mem);
+void console_init(u32 mem);
 void cputchar(char ch);
 void cputs(const char *s);
-void cputhex(uint64_t hex);
+void cputhex(u64 hex);
 
 #endif

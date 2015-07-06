@@ -24,7 +24,7 @@
     } while (0)
 
 
-static int tonum(char *buf, uint64_t num, int base)
+static int tonum(char *buf, u64 num, int base)
 {
     int digits = 0;
     char *hex = "0123456789abcdef";
@@ -54,11 +54,11 @@ static int tostr(char *buf, char *argstr, int precision)
 
 int vsprintk(char *str, const char *fmt, va_list va)
 {
-    int len, digits, bytes, width, precision, i32,
-        precisionpad = 0, widthpad = 0;
-    unsigned int u32;
-    int64_t i64;
-    uint64_t u64;
+    int len, digits, bytes, width, precision,
+        precisionpad = 0, widthpad = 0, d;
+    unsigned int u;
+    i64 q;
+    u64 U;
     char *argstr, widthprefix, sign, temp[1024];
     const char *p;
 
@@ -101,45 +101,45 @@ int vsprintk(char *str, const char *fmt, va_list va)
         /* conversion */
         switch (*p) {
             case 'd':
-                i32 = va_arg(va, int);
-                if (i32 < 0) {
+                d = va_arg(va, int);
+                if (d < 0) {
                     sign = 1;
-                    i32 = -i32;
+                    d = -d;
                 }
-                digits = tonum(temp, i32, 10);
+                digits = tonum(temp, d, 10);
                 goto setlength;
 
             case 'u':
-                u32 = va_arg(va, unsigned int);
-                digits = tonum(temp, u32, 10);
+                u = va_arg(va, unsigned int);
+                digits = tonum(temp, u, 10);
                 goto setlength;
 
             case 'q':
-                i64 = va_arg(va, int64_t);
-                if (i64 < 0) {
+                q = va_arg(va, i64);
+                if (q < 0) {
                     sign = 1;
-                    i64 = -i64;
+                    q = -q;
                 }
-                digits = tonum(temp, i64, 10);
+                digits = tonum(temp, q, 10);
                 goto setlength;
 
             case 'U':
-                u64 = va_arg(va, uint64_t);
-                digits = tonum(temp, u64, 10);
+                U = va_arg(va, u64);
+                digits = tonum(temp, U, 10);
                 goto setlength;
 
             case 'P':
                 sign = 2;
             case 'X':
-                u64 = va_arg(va, uint64_t);
-                digits = tonum(temp, u64, 16);
+                U = va_arg(va, u64);
+                digits = tonum(temp, U, 16);
                 goto setlength;
 
             case 'p':
                 sign = 2;
             case 'x':
-                u32 = va_arg(va, unsigned int);
-                digits = tonum(temp, u32, 16);
+                u = va_arg(va, unsigned int);
+                digits = tonum(temp, u, 16);
 setlength:
                 if (precision > digits)
                     precisionpad = precision - digits;

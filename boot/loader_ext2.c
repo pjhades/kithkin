@@ -5,11 +5,11 @@
 #include <kernel/console.h>
 #include <string.h>
 
-static int loader_ext2_read_block(struct ext2_fsinfo *fs, uint32_t blkid,
-        uint8_t *block)
+static int loader_ext2_read_block(struct ext2_fsinfo *fs, u32 blkid,
+        u8 *block)
 {
-    uint32_t blksz;
-    uint64_t offset;
+    u32 blksz;
+    u64 offset;
 
     blksz = 1024 << fs->sb.sb_log_block_size;
     offset = fs->disk_start + blkid * blksz;
@@ -19,12 +19,12 @@ static int loader_ext2_read_block(struct ext2_fsinfo *fs, uint32_t blkid,
 /*
  * Find an inode according to the given inode ID
  */
-static int loader_ext2_find_inode(struct ext2_fsinfo *fs, uint32_t id,
+static int loader_ext2_find_inode(struct ext2_fsinfo *fs, u32 id,
         struct ext2_inode *inode)
 {
     int i;
-    uint8_t block[4096];
-    uint32_t grpid, blksz, blkid, inode_idx;
+    u8 block[4096];
+    u32 grpid, blksz, blkid, inode_idx;
     struct ext2_block_group_desc *desc_table, desc;
     struct ext2_inode *inodes;
 
@@ -60,12 +60,12 @@ static int loader_ext2_find_inode(struct ext2_fsinfo *fs, uint32_t id,
  * for the file @name, store the result inode in @inode.
  */
 static int loader_ext2_search_dir_indirect(struct ext2_fsinfo *fs,
-        uint32_t blkid, const char *name, struct ext2_inode *inode,
+        u32 blkid, const char *name, struct ext2_inode *inode,
         int level)
 {
     int i, found;
-    uint8_t block[4096], *p;
-    uint32_t *blkids, n_blkid, blksz;
+    u8 block[4096], *p;
+    u32 *blkids, n_blkid, blksz;
     struct ext2_direntry *entry;
 
     blksz = 1024 << fs->sb.sb_log_block_size;
@@ -89,7 +89,7 @@ static int loader_ext2_search_dir_indirect(struct ext2_fsinfo *fs,
         return 0;
     }
 
-    blkids = (uint32_t *)block;
+    blkids = (u32 *)block;
     for (i = 0; i < n_blkid; i++) {
         found = loader_ext2_search_dir_indirect(fs, blkids[i], name, inode,
                 level - 1);
@@ -169,12 +169,12 @@ int loader_ext2_get_fsinfo(struct ext2_fsinfo *fs)
     return 0;
 }
 
-static int loader_ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
+static int loader_ext2_read_indirect(struct ext2_fsinfo *fs, u32 blkid,
         int level, struct ext2_fshelp *help)
 {
     int i;
-    uint8_t block[4096];
-    uint32_t *blkids, n_blkid, blksz, sz;
+    u8 block[4096];
+    u32 *blkids, n_blkid, blksz, sz;
 
     blksz = 1024 << fs->sb.sb_log_block_size;
     n_blkid = blksz >> 2;
@@ -193,7 +193,7 @@ static int loader_ext2_read_indirect(struct ext2_fsinfo *fs, uint32_t blkid,
 
     if (loader_ext2_read_block(fs, blkid, block) < 0)
         return -1;
-    blkids = (uint32_t *)block;
+    blkids = (u32 *)block;
     i = help->index[level];
     help->index[level] = 0;
     for (; i < n_blkid; i++) {
@@ -234,11 +234,11 @@ ssize_t loader_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode,
         void *buf, size_t total, off_t offset)
 {
     int i;
-    uint32_t blksz, bbits, bmask, quater, qbits, fileblock;
-    uint64_t filesz;
+    u32 blksz, bbits, bmask, quater, qbits, fileblock;
+    u64 filesz;
     struct ext2_fshelp help = {buf, total, 0};
 
-    filesz = ((uint64_t)inode->i_dir_acl << 32) | inode->i_size_lo32;
+    filesz = ((u64)inode->i_dir_acl << 32) | inode->i_size_lo32;
     if (offset + total > filesz)
         total = filesz - offset;
 
@@ -276,7 +276,7 @@ ssize_t loader_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode,
     fileblock -= quater;
     offset -= quater * blksz;
     if (fileblock < quater * quater) {
-        uint64_t mask = (1LL << (bbits + qbits)) - 1;
+        u64 mask = (1LL << (bbits + qbits)) - 1;
         help.index[2] = offset >> (bbits + qbits);
         help.index[1] = (offset & mask) >> bbits;
         help.index[0] = (offset & mask) & bmask;
@@ -287,7 +287,7 @@ ssize_t loader_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode,
     fileblock -= quater * quater;
     offset -= quater * quater * blksz;
     if (fileblock < quater * quater * quater) {
-        uint64_t mask1 = (1LL << (bbits + qbits)) - 1,
+        u64 mask1 = (1LL << (bbits + qbits)) - 1,
                  mask2 = (1LL << (bbits*2 + qbits)) - 1;
         help.index[3] = offset >> (bbits*2 + qbits);
         help.index[2] = (offset & mask2) >> (bbits + qbits);

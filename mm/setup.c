@@ -8,28 +8,28 @@
 
 struct gdt_ptr gdtptr;
 struct mem_e820_map e820map;
-uint64_t boot_gdt[N_BOOT_GDT_ENTRY];
+u64 boot_gdt[N_BOOT_GDT_ENTRY];
 
 struct page *mem_map;
 
 /* page frame number of the minimal/maximal usable physical page */
-uint32_t minpfn, maxpfn;
+u32 minpfn, maxpfn;
 
 static void get_kernel_data(void)
 {
     char *dst = (char *)KERNEL_BOOTDATA;
     unsigned char type;
-    uint32_t size;
+    u32 size;
 
     type = *((unsigned char *)dst);
     while (type != BOOTDATA_NONE) {
         dst += sizeof(unsigned char);
-        size = *((uint32_t *)dst);
-        dst += sizeof(uint32_t);
+        size = *((u32 *)dst);
+        dst += sizeof(u32);
 
         if (type == BOOTDATA_BOOTGDT) {
             memcpy(boot_gdt, dst, size);
-            dst += sizeof(uint64_t) * N_BOOT_GDT_ENTRY;
+            dst += sizeof(u64) * N_BOOT_GDT_ENTRY;
         }
         else if (type == BOOTDATA_BOOTGDTPTR) {
             memcpy(&gdtptr, dst, size);
@@ -49,7 +49,7 @@ static void get_kernel_data(void)
 static void scan_e820map(void)
 {
     int i;
-    uint32_t maxsize;
+    u32 maxsize;
 
     minpfn = 0xffffffff;
     maxpfn = 0;
@@ -100,7 +100,7 @@ static void init_memmap(void)
     extern char pagedir[];
     pde_t *pde;
     pte_t *pte;
-    uint32_t pde_start, pde_end, pte_start, pte_end;
+    u32 pde_start, pde_end, pte_start, pte_end;
     int pde_idx, pte_idx, count;
 
     pte_start = phys_to_pfn(phys(KERNEL_VIRT_START));

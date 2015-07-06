@@ -6,7 +6,7 @@ extern struct console_device console;
 
 static void console_set_cursor(void)
 {
-    uint16_t pos = console.row * CONSOLE_COLS + console.col;
+    u16 pos = console.row * CONSOLE_COLS + console.col;
 
     outb(CONSOLE_CTRL, CONSOLE_CURSOR_HI);
     outb(CONSOLE_DATA, (pos >> 8) & 0xff);
@@ -56,7 +56,7 @@ void console_clear_screen(void)
     console_set_cursor();
 }
 
-void console_init(uint32_t mem)
+void console_init(u32 mem)
 {
     console.mem = (console_mem_ptr_t)mem;
     console_clear_screen();
@@ -89,11 +89,11 @@ void cputs(const char *s)
         cputchar(*s);
 }
 
-void cputhex(uint64_t hex)
+void cputhex(u64 hex)
 {
     int i = 0, j = 2;
     char *table = "0123456789abcdef", s[20], t[20] = "0x00";
-    uint64_t v = hex;
+    u64 v = hex;
 
     while (v) {
         s[i++] = table[(v & 0xf0) >> 4];

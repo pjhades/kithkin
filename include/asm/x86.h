@@ -5,9 +5,9 @@
 
 #define CR0_PG 0x80000000
 
-uint8_t inb(uint16_t port);
-void outb(uint16_t port, uint8_t value);
-void insl(uint16_t port, void *addr, int count);
-void outsl(uint16_t port, void *addr, int count);
+u8 inb(u16 port);
+void outb(u16 port, u8 value);
+void insl(u16 port, void *addr, int count);
+void outsl(u16 port, void *addr, int count);
 
 #endif

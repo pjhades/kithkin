@@ -25,7 +25,7 @@ static struct ata_device *devlist[] = {
 static int ata_poll(struct ata_device *dev)
 {
     int i;
-    uint8_t value;
+    u8 value;
 
     /* delay ~400ns */
     for (i = 0; i < 4; i++)
@@ -56,9 +56,9 @@ void ata_init(void)
 int ata_identify_device(struct ata_device *dev)
 {
     int count;
-    uint8_t value, lba1, lba2;
-    uint16_t info16[256];
-    uint32_t *info32;
+    u8 value, lba1, lba2;
+    u16 info16[256];
+    u32 *info32;
 
     if (dev->channel != ATA_PRIMARY && dev->channel != ATA_SECONDARY)
         return -1;
@@ -96,7 +96,7 @@ int ata_identify_device(struct ata_device *dev)
     }
 
     insl(ata_port_data(dev->channel), info16, 128);
-    info32 = (uint32_t *)info16;
+    info32 = (u32 *)info16;
 
     /* TODO
      * LBA28 is forced here. We should set the fallback to CHS
@@ -113,7 +113,7 @@ int ata_identify_device(struct ata_device *dev)
     dev->addrmode = ATA_ADDRESS_LBA28;
     if (!(info16[49] & (1 << 9)))
         return -1;
-    dev->size = (uint64_t)info32[30];
+    dev->size = (u64)info32[30];
     dev->n_cylinder = info16[1];
     dev->n_head = info16[3];
     dev->n_sector_pertrack = info16[6];
@@ -124,10 +124,10 @@ int ata_identify_device(struct ata_device *dev)
 /* Only support LBA28 now so that
  * lba_hi should * always be 0.
  */
-int ata_read(struct ata_device *dev, uint64_t lba, uint8_t n_sector,
-        uint8_t *data)
+int ata_read(struct ata_device *dev, u64 lba, u8 n_sector,
+        u8 *data)
 {
-    uint8_t lba_bytes[6] = {0};
+    u8 lba_bytes[6] = {0};
     int i, status;
 
     lba_bytes[0] = lba & 0x000000ff;
@@ -152,10 +152,10 @@ int ata_read(struct ata_device *dev, uint64_t lba, uint8_t n_sector,
     return 0;
 }
 
-int ata_write(struct ata_device *dev, uint64_t lba, uint8_t n_sector,
-        uint8_t *data)
+int ata_write(struct ata_device *dev, u64 lba, u8 n_sector,
+        u8 *data)
 {
-    uint8_t lba_bytes[6] = {0};
+    u8 lba_bytes[6] = {0};
     int i, status;
 
     lba_bytes[0] = lba & 0x000000ff;
@@ -186,7 +186,7 @@ int ata_write(struct ata_device *dev, uint64_t lba, uint8_t n_sector,
 /* TODO
  * here n must be a multiple of the sector size
  */
-size_t loader_disk_read(uint64_t diskoff, size_t n, void *buf)
+size_t loader_disk_read(u64 diskoff, size_t n, void *buf)
 {
     return ata_read(&disk_primaster, off_to_lba(diskoff),
             (n >> ATA_SECTOR_BITS), buf);

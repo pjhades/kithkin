@@ -14,16 +14,16 @@ void enter_protected_mode(void);
 
 inline static int check_a20(void)
 {
-    *((uint16_t *)0x07dfe) = 0xdead; /* write to 0000:7dfe */
-    *((uint16_t *)((0x0ffff << 4) + 0x07e0e)) = 0xbeef; /* write to ffff:7e0e */
-    if (*((uint16_t *)0x07dfe) == 0xbeef) /* check if overwritten */
+    *((u16 *)0x07dfe) = 0xdead; /* write to 0000:7dfe */
+    *((u16 *)((0x0ffff << 4) + 0x07e0e)) = 0xbeef; /* write to ffff:7e0e */
+    if (*((u16 *)0x07dfe) == 0xbeef) /* check if overwritten */
         return -1;
     return 0;
 }
 
 static void wait_read_8042(void)
 {
-    uint8_t value;
+    u8 value;
 
     while (1) {
         value = inb(0x64);
@@ -34,7 +34,7 @@ static void wait_read_8042(void)
 
 static void wait_write_8042(void)
 {
-    uint8_t value;
+    u8 value;
     
     while (1) {
         value = inb(0x64);
@@ -45,7 +45,7 @@ static void wait_write_8042(void)
 
 static int enable_a20(void)
 {
-    uint8_t value;
+    u8 value;
 
     if (check_a20() == 0)
         return 0;
@@ -125,7 +125,7 @@ static int detect_memory(void)
     return error ? -1 : 0;
 }
 
-uint64_t boot_gdt[N_BOOT_GDT_ENTRY] = {
+u64 boot_gdt[N_BOOT_GDT_ENTRY] = {
     /* 0: null descriptor */
     [0] = seg_desc(0x0, 0x0, 0x0),
     /* 1: 32-bit read/executable code segment, 4k granularity, DPL 0 */
@@ -136,7 +136,7 @@ uint64_t boot_gdt[N_BOOT_GDT_ENTRY] = {
 
 struct gdt_ptr boot_gdtptr = {
     .len = sizeof(boot_gdt) - 1,
-    .ptr = (uint32_t)&boot_gdt
+    .ptr = (u32)&boot_gdt
 };
 
 void main(void)

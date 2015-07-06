@@ -3,11 +3,11 @@
 
 #include <kernel/types.h>
 
-typedef uint32_t elf32_addr;
-typedef uint16_t elf32_half;
-typedef uint32_t elf32_off;
-typedef int32_t  elf32_sword;
-typedef uint32_t elf32_word;
+typedef u32 elf32_addr;
+typedef u16 elf32_half;
+typedef u32 elf32_off;
+typedef i32  elf32_sword;
+typedef u32 elf32_word;
 
 #define EI_NIDENT 16
 

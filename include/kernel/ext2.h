@@ -7,46 +7,46 @@
 #define EXT2_SUPERBLOCK_SIZE 1024
 
 struct ext2_superblock {
-    uint32_t sb_n_inodes;
-    uint32_t sb_n_blocks;
-    uint32_t sb_n_blocks_reserved;
-    uint32_t sb_n_free_blocks;
-    uint32_t sb_n_free_inodes;
-    uint32_t sb_first_data_block; /* Block number of block containing superblock */
-    uint32_t sb_log_block_size;   /* blocksize = 1024 << x */
-    uint32_t sb_log_frag_size;    /* fragsize = + ? 1024 << x : 1024 >> -x */
-    uint32_t sb_n_blocks_per_blkgrp;
-    uint32_t sb_n_frags_per_blkgrp;
-    uint32_t sb_n_inodes_per_blkgrp;
-    uint32_t sb_last_mount_time;
-    uint32_t sb_last_write_time;
-    uint16_t sb_mount_count;
-    uint16_t sb_max_mount;
-    uint16_t sb_magic;
-    uint16_t sb_fs_state;
-    uint16_t sb_on_error; /* Error handling methods */
-    uint16_t sb_ver_minor; /* Minor version */
-    uint32_t sb_last_check_time; /* Time of last consistency check */
-    uint32_t sb_check_interval; /* Interval between forced consistency check */
-    uint32_t sb_os_id; /* Creator OS ID */
-    uint32_t sb_ver_major; /* Major version */
-    uint16_t sb_uid; /* User that can use reserved blocks */
-    uint16_t sb_gid; /* Group that can use reserved blocks */
+    u32 sb_n_inodes;
+    u32 sb_n_blocks;
+    u32 sb_n_blocks_reserved;
+    u32 sb_n_free_blocks;
+    u32 sb_n_free_inodes;
+    u32 sb_first_data_block; /* Block number of block containing superblock */
+    u32 sb_log_block_size;   /* blocksize = 1024 << x */
+    u32 sb_log_frag_size;    /* fragsize = + ? 1024 << x : 1024 >> -x */
+    u32 sb_n_blocks_per_blkgrp;
+    u32 sb_n_frags_per_blkgrp;
+    u32 sb_n_inodes_per_blkgrp;
+    u32 sb_last_mount_time;
+    u32 sb_last_write_time;
+    u16 sb_mount_count;
+    u16 sb_max_mount;
+    u16 sb_magic;
+    u16 sb_fs_state;
+    u16 sb_on_error; /* Error handling methods */
+    u16 sb_ver_minor; /* Minor version */
+    u32 sb_last_check_time; /* Time of last consistency check */
+    u32 sb_check_interval; /* Interval between forced consistency check */
+    u32 sb_os_id; /* Creator OS ID */
+    u32 sb_ver_major; /* Major version */
+    u16 sb_uid; /* User that can use reserved blocks */
+    u16 sb_gid; /* Group that can use reserved blocks */
     /* extended fields ... */
-    uint32_t sb_first_inode; /* First non-reserved inode */
-    uint16_t sb_inode_size;
-    uint8_t  __unused[934];
+    u32 sb_first_inode; /* First non-reserved inode */
+    u16 sb_inode_size;
+    u8  __unused[934];
 } __attribute__((packed));
 
 struct ext2_block_group_desc {
-    uint32_t bg_block_bitmap;
-    uint32_t bg_inode_bitmap;
-    uint32_t bg_inode_table; /* Block address of inode table */
-    uint16_t bg_n_free_blocks;
-    uint16_t bg_n_free_inodes;
-    uint16_t bg_n_dirs;
-    uint16_t __pad;
-    uint32_t __reserved[3];
+    u32 bg_block_bitmap;
+    u32 bg_inode_bitmap;
+    u32 bg_inode_table; /* Block address of inode table */
+    u16 bg_n_free_blocks;
+    u16 bg_n_free_inodes;
+    u16 bg_n_dirs;
+    u16 __pad;
+    u32 __reserved[3];
 } __attribute__((packed));
 
 #define EXT2_N_DIRECT_BLK_PTR 12
@@ -64,38 +64,38 @@ struct ext2_block_group_desc {
 #define EXT2_TYPE_FIFO 0x1000
 
 struct ext2_inode {
-    uint16_t i_mode;
-    uint16_t i_uid;
-    uint32_t i_size_lo32;
-    uint32_t i_atime;
-    uint32_t i_ctime;
-    uint32_t i_mtime;
-    uint32_t i_dtime;
-    uint16_t i_gid;
-    uint16_t i_n_links;
-    uint32_t i_n_sectors;
-    uint32_t i_flags;
-    uint32_t i_os_value1;
-    uint32_t i_blocks[EXT2_N_BLK_PTRS];
-    uint32_t i_generation;
-    uint32_t i_file_acl;
-    uint32_t i_dir_acl;
-    uint32_t i_frag_blk;
-    uint32_t i_os_value2[3];
+    u16 i_mode;
+    u16 i_uid;
+    u32 i_size_lo32;
+    u32 i_atime;
+    u32 i_ctime;
+    u32 i_mtime;
+    u32 i_dtime;
+    u16 i_gid;
+    u16 i_n_links;
+    u32 i_n_sectors;
+    u32 i_flags;
+    u32 i_os_value1;
+    u32 i_blocks[EXT2_N_BLK_PTRS];
+    u32 i_generation;
+    u32 i_file_acl;
+    u32 i_dir_acl;
+    u32 i_frag_blk;
+    u32 i_os_value2[3];
 } __attribute__((packed));
 
 struct ext2_direntry {
-    uint32_t d_inode;
-    uint16_t d_rec_len;
-    uint8_t  d_name_len;
-    uint8_t  d_type;
+    u32 d_inode;
+    u16 d_rec_len;
+    u8  d_name_len;
+    u8  d_type;
     char     d_name[];
 };
 
 struct ext2_fsinfo {
     struct ext2_superblock sb;
     struct ext2_inode root_inode;
-    uint64_t disk_start;
+    u64 disk_start;
 };
 
 /*

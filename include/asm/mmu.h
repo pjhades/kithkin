@@ -6,11 +6,11 @@
 
 /* segment descriptor */
 #define seg_desc(base, limit, flags)        \
-    (((((uint64_t)base )&0xff000000)<<32) | \
-     ((((uint64_t)flags)&0x0000f0ff)<<40) | \
-     ((((uint64_t)limit)&0x000f0000)<<32) | \
-     ((((uint64_t)base )&0x00ffffff)<<16) | \
-      (((uint64_t)limit)&0x0000ffff))
+    (((((u64)base )&0xff000000)<<32) | \
+     ((((u64)flags)&0x0000f0ff)<<40) | \
+     ((((u64)limit)&0x000f0000)<<32) | \
+     ((((u64)base )&0x00ffffff)<<16) | \
+      (((u64)limit)&0x0000ffff))
 #endif
 
 #define BOOT_GDT_ENTRY_CODE 1

@@ -12,18 +12,18 @@
 static void *load_kernel(void)
 {
     int i, ret, sz, loadsz;
-    uint8_t *addr, buf[BUFSZ];
-    uint32_t phdr_off, phyaddr;
+    u8 *addr, buf[BUFSZ];
+    u32 phdr_off, phyaddr;
     struct ext2_fsinfo fs;
     struct ext2_inode ino;
     struct elf32_ehdr elf;
     struct elf32_phdr phdr;
 
     /* get LBA of first sector from partition table */
-    addr = (uint8_t *)0x7dbe; /* 0x7c00 + 446 */
+    addr = (u8 *)0x7dbe; /* 0x7c00 + 446 */
     while (*addr != 0x80 || *(addr + 4) != 0x83)
         addr += 0x10;
-    fs.disk_start = (*((uint32_t *)(addr + 8))) << 9;
+    fs.disk_start = (*((u32 *)(addr + 8))) << 9;
 
     loader_ext2_get_fsinfo(&fs);
     if ((ret = loader_ext2_find_file(&fs, "/boot/kernel.img", &ino)) == -1)
@@ -79,8 +79,8 @@ static void copy_kernel_data(void)
     do { \
         *((unsigned char *)(ptr)) = tag; \
         (ptr) += sizeof(unsigned char); \
-        *((uint32_t *)(ptr)) = sizeof((var)); \
-        (ptr) += sizeof(uint32_t); \
+        *((u32 *)(ptr)) = sizeof((var)); \
+        (ptr) += sizeof(u32); \
         memcpy((ptr), (void *)&(var), sizeof((var))); \
         (ptr) += sizeof((var)); \
     } while (0)

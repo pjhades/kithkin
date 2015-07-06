@@ -5,7 +5,7 @@
 #include <asm/e820.h>
 #include <kernel/mm.h>
 
-extern uint64_t boot_gdt[N_BOOT_GDT_ENTRY];
+extern u64 boot_gdt[N_BOOT_GDT_ENTRY];
 extern struct gdt_ptr boot_gdtptr;
 extern struct mem_e820_map e820map;
 

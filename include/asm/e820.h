@@ -13,15 +13,15 @@ enum {
 };
 
 struct mem_e820_entry {
-    uint64_t base; 
-    uint64_t len;
-    uint32_t type;
-    uint32_t attr;
+    u64 base;
+    u64 len;
+    u32 type;
+    u32 attr;
 };
 
 #define MEM_E820_MAX 128
 struct mem_e820_map {
-    uint32_t n_regions;
+    u32 n_regions;
     struct mem_e820_entry regions[MEM_E820_MAX];
 };
 

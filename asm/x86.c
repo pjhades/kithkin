@@ -1,8 +1,8 @@
 #include <kernel/types.h>
 
-uint8_t inb(uint16_t port)
+u8 inb(u16 port)
 {
-    uint8_t value;
+    u8 value;
 
     asm volatile (
             "inb %w1, %0\n\t"
@@ -11,7 +11,7 @@ uint8_t inb(uint16_t port)
     return value;
 }
 
-void outb(uint16_t port, uint8_t value)
+void outb(u16 port, u8 value)
 {
     asm volatile (
             "outb %0, %w1\n\t"
@@ -19,7 +19,7 @@ void outb(uint16_t port, uint8_t value)
             );
 }
 
-void insl(uint16_t port, void *addr, int count)
+void insl(u16 port, void *addr, int count)
 {
     asm volatile (
             "cld\n\t"
@@ -30,7 +30,7 @@ void insl(uint16_t port, void *addr, int count)
             );
 }
 
-void outsl(uint16_t port, void *addr, int count)
+void outsl(u16 port, void *addr, int count)
 {
     asm volatile (
             "cld\n\t"

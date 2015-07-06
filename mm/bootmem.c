@@ -5,21 +5,21 @@
 
 struct bootmem_data bdata;
 extern char _end[];
-extern uint32_t minpfn, maxpfn;
+extern u32 minpfn, maxpfn;
 
-static void bootmem_mark_usable(struct bootmem_data *bdata, uint32_t pfn)
+static void bootmem_mark_usable(struct bootmem_data *bdata, u32 pfn)
 {
     bdata->bitmap[pfn >> 3] &= ~(1 << (pfn & 7));
 }
 
-static void bootmem_mark_reserved(struct bootmem_data *bdata, uint32_t pfn)
+static void bootmem_mark_reserved(struct bootmem_data *bdata, u32 pfn)
 {
     bdata->bitmap[pfn >> 3] |= (1 << (pfn & 7));
 }
 
 void init_bootmem(void)
 {
-    uint32_t pfn;
+    u32 pfn;
 
     /* bitmap lives in the next page after _end */
     bdata.bitmap = (unsigned char *)(pfn_up(_end) << PAGE_SHIFT);
@@ -42,11 +42,11 @@ void init_bootmem(void)
     bootmem_mark_reserved(&bdata, pfn_up(phys(_end)));
 }
 
-void *bootmem_alloc(uint32_t size)
+void *bootmem_alloc(u32 size)
 {
     void *ret;
     int n_page, i;
-    uint32_t pfn, bytes;
+    u32 pfn, bytes;
 
     if (size >= PAGE_SIZE) {
         n_page = (size + PAGE_SIZE - 1) >> PAGE_SHIFT;

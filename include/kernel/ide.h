@@ -54,22 +54,22 @@ enum {
 };
 
 struct ata_device {
-    uint16_t channel;
-    uint16_t disk;
-    uint8_t addrmode;
-    uint64_t size;
-    uint16_t n_cylinder;
-    uint16_t n_head;
-    uint16_t n_sector_pertrack;
+    u16 channel;
+    u16 disk;
+    u8 addrmode;
+    u64 size;
+    u16 n_cylinder;
+    u16 n_head;
+    u16 n_sector_pertrack;
 };
 
 void ata_init(void);
 int ata_identify_device(struct ata_device *dev);
-int ata_read(struct ata_device *dev, uint64_t lba, uint8_t n_sector,
-        uint8_t *data);
-int ata_write(struct ata_device *dev, uint64_t lba, uint8_t n_sector,
-        uint8_t *data);
+int ata_read(struct ata_device *dev, u64 lba, u8 n_sector,
+        u8 *data);
+int ata_write(struct ata_device *dev, u64 lba, u8 n_sector,
+        u8 *data);
 
-size_t loader_disk_read(uint64_t diskoff, size_t n, void *buf);
+size_t loader_disk_read(u64 diskoff, size_t n, void *buf);
 
 #endif
