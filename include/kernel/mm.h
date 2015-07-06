@@ -3,10 +3,16 @@
 
 #include <asm/mmu.h>
 
+/* we do not touch physical memory lower than this */
 #define MIN_PHYS 0x100000
 
 #define KERNEL_VIRT_START 0xc0000000
+
+/* physical address of data obtained before kernel executes */
 #define KERNEL_BOOTDATA 0x00007e00
+
+/* directly map the first 896MB to kernel virtual space */
+#define DIRECTMAP_PHYS_MAX 0x38000000
 
 #define PAGEDIR_SHIFT 22
 #define PAGE_SHIFT    12
@@ -16,9 +22,6 @@
 #define N_PTE_PER_PDE 1024
 #define N_USER_PDE    (KERNEL_VIRT_START >> PAGEDIR_SHIFT)
 #define N_KERNEL_PDE  (N_PDE - N_USER_PDE)
-
-/* directly mapped 896MB */
-#define DIRECTMAP_PHYS_MAX 0x38000000
 
 #define set_pde(addr, pde) *((pde_t *)addr) = (pde_t)(pde)
 #define set_pte(addr, pte) *((pte_t *)addr) = (pte_t)(pte)

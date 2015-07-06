@@ -62,9 +62,12 @@ static void scan_e820map(void)
 
         if (e820map.regions[i].type != E820_USABLE)
             continue;
+
+        /* here we only use the largest available region */
         if (e820map.regions[i].len < maxsize
                 || e820map.regions[i].base < MIN_PHYS)
             continue;
+
         minpfn = e820map.regions[i].base;
         maxpfn = e820map.regions[i].base + e820map.regions[i].len - 1;
         maxsize = e820map.regions[i].len;
