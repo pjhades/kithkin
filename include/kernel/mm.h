@@ -26,8 +26,8 @@
 #define set_pde(addr, pde) *((pde_t *)addr) = (pde_t)(pde)
 #define set_pte(addr, pte) *((pte_t *)addr) = (pte_t)(pte)
 
-#define phys_to_pfn(pa)  ((pa) >> PAGE_SHIFT)
-#define pfn_to_phys(pfn) ((pfn) << PAGE_SHIFT)
+#define phys_to_pfn(pa)  ((u32)(pa) >> PAGE_SHIFT)
+#define pfn_to_phys(pfn) ((u32)(pfn) << PAGE_SHIFT)
 
 #define pfn_up(pa) (((u32)(pa) + PAGE_SIZE - 1) >> PAGE_SHIFT)
 #define pfn_down(pa) ((u32)(pa) >> PAGE_SHIFT)
@@ -35,7 +35,7 @@
 #define phys(addr) ((u32)(addr) - KERNEL_VIRT_START)
 #define virt(addr) ((u32)(addr) + KERNEL_VIRT_START)
 
-#define pfn_to_page(pfn) &mem_map[(pfn) - minpfn]
+#define pfn_to_page(pfn) (mem_map + (pfn) - minpfn)
 #define page_to_pfn(page) ((page) - mem_map + minpfn)
 
 

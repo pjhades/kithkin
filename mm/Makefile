@@ -1,4 +1,4 @@
-SRCS := setup.c bootmem.c
+SRCS := setup.c bootmem.c buddy.c
 OBJS := $(patsubst %.c, %.o, $(SRCS))
 
 mm.o: $(SRCS)

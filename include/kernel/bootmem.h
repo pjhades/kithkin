@@ -12,5 +12,6 @@ struct bootmem_data {
 
 void init_bootmem(void);
 void *bootmem_alloc(u32 size);
+void free_all_bootmem(void);
 
 #endif

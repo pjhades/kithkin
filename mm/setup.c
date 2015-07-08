@@ -5,6 +5,7 @@
 #include <kernel/bootdata.h>
 #include <kernel/mm.h>
 #include <kernel/bootmem.h>
+#include <kernel/buddy.h>
 
 struct gdt_ptr gdtptr;
 struct mem_e820_map e820map;
@@ -126,7 +127,6 @@ static void init_mapping(void)
     }
 
     load_pagetable((pde_t *)phys(pagedir));
-
 }
 
 static void init_pages(void)
@@ -146,4 +146,6 @@ void meminit(void)
     init_bootmem();
     init_mapping();
     init_pages();
+    init_buddy();
+    //free_all_bootmem();
 }
