@@ -4,25 +4,21 @@
 #include <kernel/mm.h>
 #include <kernel/buddy.h>
 
-extern char _end[];
-extern u32 minpfn, maxpfn;
-extern struct page *mem_map;
-
 struct bootmem_data bdata;
 
-static void bootmem_mark_usable(struct bootmem_data *bdata, u32 pfn)
+static void bootmem_mark_usable(struct bootmem_data *bd, u32 pfn)
 {
-    bdata->bitmap[pfn >> 3] &= ~(1 << (pfn & 7));
+    bd->bitmap[pfn >> 3] &= ~(1 << (pfn & 7));
 }
 
-static void bootmem_mark_reserved(struct bootmem_data *bdata, u32 pfn)
+static void bootmem_mark_reserved(struct bootmem_data *bd, u32 pfn)
 {
-    bdata->bitmap[pfn >> 3] |= (1 << (pfn & 7));
+    bd->bitmap[pfn >> 3] |= (1 << (pfn & 7));
 }
 
-static int bootmem_is_reserved(struct bootmem_data *bdata, u32 pfn)
+static int bootmem_is_reserved(struct bootmem_data *bd, u32 pfn)
 {
-    return bdata->bitmap[pfn >> 3] & (1 << (pfn & 7));
+    return bd->bitmap[pfn >> 3] & (1 << (pfn & 7));
 }
 
 void init_bootmem(void)
@@ -31,7 +27,7 @@ void init_bootmem(void)
     int n_bitmap_page;
 
     /* bitmap lives in the next page after _end */
-    bdata.bitmap = (unsigned char *)(pfn_up(_end) << PAGE_SHIFT);
+    bdata.bitmap = (unsigned char *)virt(pfn_up(phys(_end)) << PAGE_SHIFT);
     bdata.size = (maxpfn + 7) >> 3;
     n_bitmap_page = (bdata.size + PAGE_SIZE - 1) >> PAGE_SHIFT;
 
@@ -49,11 +45,11 @@ void init_bootmem(void)
     memset(bdata.bitmap, 0xff, bdata.size);
 
     /* mark usable pages */
-    for (pfn = minpfn; pfn <= maxpfn; pfn++)
+    for (pfn = pfn_up(phys(_end)); pfn <= maxpfn; pfn++)
         bootmem_mark_usable(&bdata, pfn);
 
     /* mark pages used by bootmem as reserved */
-    pfn = phys_to_pfn(bdata.bitmap);
+    pfn = phys_to_pfn(phys(bdata.bitmap));
     while (n_bitmap_page--) {
         bootmem_mark_reserved(&bdata, pfn);
         pfn++;
@@ -79,7 +75,7 @@ void *bootmem_alloc(u32 size)
         if (phys(bdata.last) != (bdata.lastpfn << PAGE_SHIFT))
             bootmem_mark_reserved(&bdata, bdata.lastpfn);
 
-        ret = (void *)(pfn_up(bdata.last) << PAGE_SHIFT);
+        ret = (void *)virt(pfn_up(phys(bdata.last)) << PAGE_SHIFT);
         pfn = pfn_down(phys(ret));
 
         for (i = 0; i < n_page - 1; i++, pfn++)
@@ -125,13 +121,15 @@ void free_all_bootmem(void)
     if ((u32)bdata.last > virt(pfn_to_phys(bdata.lastpfn)))
         bootmem_mark_reserved(&bdata, bdata.lastpfn);
 
-    for (pfn = 0; pfn <= maxpfn; pfn++)
-        if (!bootmem_is_reserved(&bdata, pfn))
+    for (pfn = minpfn; pfn <= maxpfn; pfn++) {
+        if (!bootmem_is_reserved(&bdata, pfn)) {
             free_pages(pfn_to_page(pfn), 0);
+        }
+    }
 
     /* free the pages used by bootmem */
     n_bitmap_page = (bdata.size + PAGE_SIZE - 1) >> PAGE_SHIFT;
-    pfn = phys_to_pfn(bdata.bitmap);
+    pfn = phys_to_pfn(phys(bdata.bitmap));
     while (n_bitmap_page--) {
         free_pages(pfn_to_page(pfn), 0);
         pfn++;

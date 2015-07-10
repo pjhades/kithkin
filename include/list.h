@@ -2,7 +2,7 @@
 #define __LIST_H__
 
 #ifndef offsetof
-#define offsetof(type, member) ((size_t)&((type *)0)->member)
+#define offsetof(type, member) ((unsigned int)&((type *)0)->member)
 #endif
 
 #ifndef container_of
@@ -66,8 +66,8 @@ struct list_node {
         (listnode)->next = (node);        \
     } while (0)
 
-#define list_insert_head(node, head) LIST_INSERT_AFTER((node), (head))
-#define list_insert_tail(node, head) LIST_INSERT_BEFORE((node), (head)) 
+#define list_insert_head(node, head) list_insert_after((node), (head))
+#define list_insert_tail(node, head) list_insert_before((node), (head))
 
 #define list_remove(node)                  \
     do {                                   \

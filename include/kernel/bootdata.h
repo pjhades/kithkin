@@ -1,9 +1,12 @@
 #ifndef __BOOTDATA_H__
 #define __BOOTDATA_H__
 
-#include <asm/mmu.h>
-#include <asm/e820.h>
-#include <kernel/mm.h>
+#include <mmu.h>
+#include <e820.h>
+#include <boot.h>
+
+/* physical address of data obtained before kernel executes */
+#define KERNEL_BOOTDATA 0x00007e00
 
 extern u64 boot_gdt[N_BOOT_GDT_ENTRY];
 extern struct gdt_ptr boot_gdtptr;

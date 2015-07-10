@@ -1,5 +1,5 @@
 #include <console.h>
-#include <asm/x86.h>
+#include <x86.h>
 #include <kernel/types.h>
 
 extern struct console_device console;

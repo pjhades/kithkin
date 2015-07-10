@@ -1,4 +1,5 @@
-#include <asm/mmu.h>
+#include <mmu.h>
+#include <boot.h>
 
 .globl _start
 

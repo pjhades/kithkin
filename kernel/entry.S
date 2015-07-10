@@ -1,3 +1,5 @@
+#include <mmu.h>
+#include <paging.h>
 #include <kernel/mm.h>
 
 #define pa(addr) addr - KERNEL_VIRT_START

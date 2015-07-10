@@ -6,6 +6,7 @@
 #include <kernel/kernel.h>
 #include <kernel/ext2.h>
 #include <kernel/bootdata.h>
+#include <kernel/mm.h>
 
 #define BUFSZ 1024
 

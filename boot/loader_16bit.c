@@ -1,7 +1,8 @@
 #include <string.h>
-#include <asm/x86.h>
-#include <asm/e820.h>
-#include <asm/mmu.h>
+#include <x86.h>
+#include <e820.h>
+#include <mmu.h>
+#include <boot.h>
 #include <kernel/types.h>
 
 asm (".code16gcc\n");

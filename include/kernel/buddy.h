@@ -13,7 +13,7 @@ struct free_area {
 };
 
 struct buddy_data {
-    struct free_area free_areas[MAX_ORDER];
+    struct free_area free_areas[MAX_ORDER + 1];
 };
 
 void init_buddy(void);

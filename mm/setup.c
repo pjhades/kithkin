@@ -1,5 +1,5 @@
 #include <string.h>
-#include <asm/e820.h>
+#include <e820.h>
 #include <kernel/types.h>
 #include <kernel/kernel.h>
 #include <kernel/bootdata.h>
@@ -11,10 +11,10 @@ struct gdt_ptr gdtptr;
 struct mem_e820_map e820map;
 u64 boot_gdt[N_BOOT_GDT_ENTRY];
 
-struct page *mem_map;
-
 /* page frame number of the minimal/maximal usable physical page */
 u32 minpfn, maxpfn;
+
+struct page *mem_map;
 
 static void get_kernel_data(void)
 {
@@ -136,7 +136,10 @@ static void init_pages(void)
     size = (maxpfn - minpfn + 1) * sizeof(struct page);
     mem_map = bootmem_alloc(size);
 
-    printk("allocated %d bytes for %d pages\n", size, (maxpfn - minpfn + 1));
+    memset(mem_map, 0, size);
+
+    printk("mem_map=%p uses %d bytes, %d pages\n", mem_map, size,
+          (size + PAGE_SIZE - 1) >> PAGE_SHIFT);
 }
 
 void meminit(void)
@@ -147,5 +150,5 @@ void meminit(void)
     init_mapping();
     init_pages();
     init_buddy();
-    //free_all_bootmem();
+    free_all_bootmem();
 }

@@ -1,6 +1,6 @@
 #include <string.h>
 #include <ide.h>
-#include <asm/x86.h>
+#include <x86.h>
 #include <kernel/types.h>
 
 struct ata_device disk_primaster = {.channel=ATA_PRIMARY, .disk=ATA_MASTER},
