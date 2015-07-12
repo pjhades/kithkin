@@ -8,7 +8,7 @@
 /* physical address of data obtained before kernel executes */
 #define KERNEL_SAVED_DATA 0x00007e00
 
-extern u64 boot_gdt[N_BOOT_GDT_ENTRY];
+extern u64 boot_gdt[NR_BOOT_GDT_ENTRY];
 extern struct gdtptr boot_gdtptr;
 extern struct mem_e820_map e820map;
 

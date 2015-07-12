@@ -9,7 +9,7 @@
 
 struct gdtptr gdtptr;
 struct mem_e820_map e820map;
-u64 boot_gdt[N_BOOT_GDT_ENTRY];
+u64 boot_gdt[NR_BOOT_GDT_ENTRY];
 
 /* page frame number of the minimal/maximal usable physical page */
 u32 minpfn, maxpfn;
@@ -30,7 +30,7 @@ static void get_kernel_data(void)
 
         if (type == SAVED_DATA_BOOTGDT) {
             memcpy(boot_gdt, dst, size);
-            dst += sizeof(u64) * N_BOOT_GDT_ENTRY;
+            dst += sizeof(u64) * NR_BOOT_GDT_ENTRY;
         }
         else if (type == SAVED_DATA_BOOTGDTPTR) {
             memcpy(&gdtptr, dst, size);
@@ -56,7 +56,7 @@ static void scan_e820map(void)
     maxpfn = 0;
     maxsize = 0;
 
-    for (i = 0; i < e820map.n_regions; i++) {
+    for (i = 0; i < e820map.nr_regions; i++) {
         printk("e820: range 0x%016X - 0x%016X, %s\n", e820map.regions[i].base,
                 e820map.regions[i].base + e820map.regions[i].len - 1,
                 e820map.regions[i].type == E820_USABLE ? "usable": "reserved");
@@ -114,14 +114,14 @@ static void init_mapping(void)
     pte_idx = pte_start;
     for (pde_idx = pde_start; pde_idx <= pde_end; pde_idx++, pde++) {
         pde = (pde_t *)pagedir + pde_idx;
-        pte = bootmem_alloc(N_PTE_PER_PDE * sizeof(pte_t));
+        pte = bootmem_alloc(NR_PTE_PER_PDE * sizeof(pte_t));
 
-        memset((void *)phys(pte), 0, N_PTE_PER_PDE * sizeof(pte_t));
+        memset((void *)phys(pte), 0, NR_PTE_PER_PDE * sizeof(pte_t));
 
         set_pde(phys(pde), phys(pte) | PDE_P | PDE_RW | PDE_US);
 
         count = 0;
-        for (; pte_idx <= pte_end && count < N_PTE_PER_PDE;
+        for (; pte_idx <= pte_end && count < NR_PTE_PER_PDE;
                pte_idx++, pte++, count++)
             set_pte(phys(pte), pfn_to_phys(pte_idx) | PTE_P | PTE_RW | PTE_US);
     }

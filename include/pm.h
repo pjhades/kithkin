@@ -3,7 +3,7 @@
 
 #define BOOT_GDT_ENTRY_CODE 1
 #define BOOT_GDT_ENTRY_DATA 2
-#define N_BOOT_GDT_ENTRY    3
+#define NR_BOOT_GDT_ENTRY    3
 
 #define BOOT_CS (BOOT_GDT_ENTRY_CODE << 3)
 #define BOOT_DS (BOOT_GDT_ENTRY_DATA << 3)

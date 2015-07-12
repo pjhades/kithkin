@@ -58,16 +58,16 @@ struct ata_device {
     u16 disk;
     u8 addrmode;
     u64 size;
-    u16 n_cylinder;
-    u16 n_head;
-    u16 n_sector_pertrack;
+    u16 nr_cylinder;
+    u16 nr_head;
+    u16 nr_sector_pertrack;
 };
 
 void ata_init(void);
 int ata_identify_device(struct ata_device *dev);
-int ata_read(struct ata_device *dev, u64 lba, u8 n_sector,
+int ata_read(struct ata_device *dev, u64 lba, u8 nr_sector,
         u8 *data);
-int ata_write(struct ata_device *dev, u64 lba, u8 n_sector,
+int ata_write(struct ata_device *dev, u64 lba, u8 nr_sector,
         u8 *data);
 
 size_t loader_disk_read(u64 diskoff, size_t n, void *buf);

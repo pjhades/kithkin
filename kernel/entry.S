@@ -34,16 +34,16 @@ _start:
     set_pde addr=init_pagedir,    ptaddr=pagetable0
     set_pde addr=init_pagedir+4,  ptaddr=pagetable1
     /* empty */
-    set_empty_pde addr=init_pagedir+8, count=N_USER_PDE-2
+    set_empty_pde addr=init_pagedir+8, count=NR_USER_PDE-2
     /* page tables mapping the higher part */
-    set_pde addr=init_pagedir+N_USER_PDE*4,    ptaddr=pagetable0
-    set_pde addr=init_pagedir+N_USER_PDE*4+4,  ptaddr=pagetable1
+    set_pde addr=init_pagedir+NR_USER_PDE*4,    ptaddr=pagetable0
+    set_pde addr=init_pagedir+NR_USER_PDE*4+4,  ptaddr=pagetable1
     /* empty */
-    set_empty_pde addr=init_pagedir+N_USER_PDE*4+8, count=N_KERNEL_PDE-2
+    set_empty_pde addr=init_pagedir+NR_USER_PDE*4+8, count=NR_KERNEL_PDE-2
 
     /* fill the page tables */
     movl pa($pagetable0), %edi
-    movl $(N_PTE_PER_PDE << 1), %ecx
+    movl $(NR_PTE_PER_PDE << 1), %ecx
     movl $(PTE_P | PTE_RW | PTE_US), %eax
 2:
     test %ecx, %ecx

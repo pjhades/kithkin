@@ -7,17 +7,17 @@
 #define EXT2_SUPERBLOCK_SIZE 1024
 
 struct ext2_superblock {
-    u32 sb_n_inodes;
-    u32 sb_n_blocks;
-    u32 sb_n_blocks_reserved;
-    u32 sb_n_free_blocks;
-    u32 sb_n_free_inodes;
+    u32 sb_nr_inodes;
+    u32 sb_nr_blocks;
+    u32 sb_nr_blocks_reserved;
+    u32 sb_nr_free_blocks;
+    u32 sb_nr_free_inodes;
     u32 sb_first_data_block; /* Block number of block containing superblock */
     u32 sb_log_block_size;   /* blocksize = 1024 << x */
     u32 sb_log_frag_size;    /* fragsize = + ? 1024 << x : 1024 >> -x */
-    u32 sb_n_blocks_per_blkgrp;
-    u32 sb_n_frags_per_blkgrp;
-    u32 sb_n_inodes_per_blkgrp;
+    u32 sb_nr_blocks_per_blkgrp;
+    u32 sb_nr_frags_per_blkgrp;
+    u32 sb_nr_inodes_per_blkgrp;
     u32 sb_last_mount_time;
     u32 sb_last_write_time;
     u16 sb_mount_count;
@@ -42,18 +42,18 @@ struct ext2_block_group_desc {
     u32 bg_block_bitmap;
     u32 bg_inode_bitmap;
     u32 bg_inode_table; /* Block address of inode table */
-    u16 bg_n_free_blocks;
-    u16 bg_n_free_inodes;
-    u16 bg_n_dirs;
+    u16 bg_nr_free_blocks;
+    u16 bg_nr_free_inodes;
+    u16 bg_nr_dirs;
     u16 __pad;
     u32 __reserved[3];
 } __attribute__((packed));
 
-#define EXT2_N_DIRECT_BLK_PTR 12
-#define EXT2_1_INDIRECT_BLK_PTR EXT2_N_DIRECT_BLK_PTR
+#define EXT2_NR_DIRECT_BLK_PTR 12
+#define EXT2_1_INDIRECT_BLK_PTR EXT2_NR_DIRECT_BLK_PTR
 #define EXT2_2_INDIRECT_BLK_PTR (EXT2_1_INDIRECT_BLK_PTR + 1)
 #define EXT2_3_INDIRECT_BLK_PTR (EXT2_2_INDIRECT_BLK_PTR + 1)
-#define EXT2_N_BLK_PTRS (EXT2_3_INDIRECT_BLK_PTR + 1)
+#define EXT2_NR_BLK_PTRS (EXT2_3_INDIRECT_BLK_PTR + 1)
 
 #define EXT2_TYPE_SOCK 0xc000
 #define EXT2_TYPE_LINK 0xa000
@@ -72,11 +72,11 @@ struct ext2_inode {
     u32 i_mtime;
     u32 i_dtime;
     u16 i_gid;
-    u16 i_n_links;
-    u32 i_n_sectors;
+    u16 i_nr_links;
+    u32 i_nr_sectors;
     u32 i_flags;
     u32 i_os_value1;
-    u32 i_blocks[EXT2_N_BLK_PTRS];
+    u32 i_blocks[EXT2_NR_BLK_PTRS];
     u32 i_generation;
     u32 i_file_acl;
     u32 i_dir_acl;

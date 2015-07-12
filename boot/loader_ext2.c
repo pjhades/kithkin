@@ -29,7 +29,7 @@ static int loader_ext2_find_inode(struct ext2_fsinfo *fs, u32 id,
 
     /* Find the group descriptor table */
     blksz = 1024 << fs->sb.sb_log_block_size;
-    grpid = (id - 1) / fs->sb.sb_n_inodes_per_blkgrp;
+    grpid = (id - 1) / fs->sb.sb_nr_inodes_per_blkgrp;
     blkid = grpid / (blksz / sizeof(struct ext2_block_group_desc));
 
     if (loader_ext2_read_block(fs, fs->sb.sb_first_data_block + blkid + 1,
@@ -41,7 +41,7 @@ static int loader_ext2_find_inode(struct ext2_fsinfo *fs, u32 id,
     memcpy(&desc, &desc_table[i], sizeof(struct ext2_block_group_desc));
 
     /* Find the block */
-    inode_idx = (id - 1) % fs->sb.sb_n_inodes_per_blkgrp;
+    inode_idx = (id - 1) % fs->sb.sb_nr_inodes_per_blkgrp;
     blkid = (inode_idx * fs->sb.sb_inode_size) / blksz;
 
     if (loader_ext2_read_block(fs, desc.bg_inode_table + blkid, block) < 0)
@@ -64,11 +64,11 @@ static int loader_ext2_search_dir_indirect(struct ext2_fsinfo *fs,
 {
     int i, found;
     u8 block[4096], *p;
-    u32 *blkids, n_blkid, blksz;
+    u32 *blkids, nr_blkid, blksz;
     struct ext2_direntry *entry;
 
     blksz = 1024 << fs->sb.sb_log_block_size;
-    n_blkid = blksz >> 2;
+    nr_blkid = blksz >> 2;
 
     if (loader_ext2_read_block(fs, blkid, block) < 0)
         return -1;
@@ -89,7 +89,7 @@ static int loader_ext2_search_dir_indirect(struct ext2_fsinfo *fs,
     }
 
     blkids = (u32 *)block;
-    for (i = 0; i < n_blkid; i++) {
+    for (i = 0; i < nr_blkid; i++) {
         found = loader_ext2_search_dir_indirect(fs, blkids[i], name, inode,
                 level - 1);
         /* continue only if not found */
@@ -115,8 +115,8 @@ static int loader_ext2_search_dir(struct ext2_fsinfo *fs,
         return -1;
     }
 
-    for (i = 0; i < EXT2_N_BLK_PTRS; i++) {
-        level = i < EXT2_N_DIRECT_BLK_PTR ? 0 : i - EXT2_N_DIRECT_BLK_PTR + 1;
+    for (i = 0; i < EXT2_NR_BLK_PTRS; i++) {
+        level = i < EXT2_NR_DIRECT_BLK_PTR ? 0 : i - EXT2_NR_DIRECT_BLK_PTR + 1;
         found = loader_ext2_search_dir_indirect(fs, dir->i_blocks[i], name,
                 inode, level);
         if (found)
@@ -173,10 +173,10 @@ static int loader_ext2_read_indirect(struct ext2_fsinfo *fs, u32 blkid,
 {
     int i;
     u8 block[4096];
-    u32 *blkids, n_blkid, blksz, sz;
+    u32 *blkids, nr_blkid, blksz, sz;
 
     blksz = 1024 << fs->sb.sb_log_block_size;
-    n_blkid = blksz >> 2;
+    nr_blkid = blksz >> 2;
 
     if (level <= 0) {
         if (loader_ext2_read_block(fs, blkid, block) < 0)
@@ -195,7 +195,7 @@ static int loader_ext2_read_indirect(struct ext2_fsinfo *fs, u32 blkid,
     blkids = (u32 *)block;
     i = help->index[level];
     help->index[level] = 0;
-    for (; i < n_blkid; i++) {
+    for (; i < nr_blkid; i++) {
         if (loader_ext2_read_indirect(fs, blkids[i], level - 1, help) < 0)
             return -1;
         if (help->count >= help->total)
@@ -214,8 +214,8 @@ ssize_t loader_ext2_read(struct ext2_fsinfo *fs, struct ext2_inode *inode, void 
     int i, level;
     struct ext2_fshelp help = {buf, total, 0};
 
-    for (i = 0; i < EXT2_N_BLK_PTRS; i++) {
-        level = i < EXT2_N_DIRECT_BLK_PTR ? 0 : i - EXT2_N_DIRECT_BLK_PTR + 1;
+    for (i = 0; i < EXT2_NR_BLK_PTRS; i++) {
+        level = i < EXT2_NR_DIRECT_BLK_PTR ? 0 : i - EXT2_NR_DIRECT_BLK_PTR + 1;
         if (loader_ext2_read_indirect(fs, inode->i_blocks[i], level, &help)
                 == -1)
             return -1;
@@ -250,8 +250,8 @@ ssize_t loader_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode,
 
     fileblock = offset >> bbits;
 
-    if (fileblock < EXT2_N_DIRECT_BLK_PTR) {
-        for (i = fileblock; i < EXT2_N_DIRECT_BLK_PTR; i++) {
+    if (fileblock < EXT2_NR_DIRECT_BLK_PTR) {
+        for (i = fileblock; i < EXT2_NR_DIRECT_BLK_PTR; i++) {
             help.index[0] = (i == fileblock ? offset & bmask : 0);
             if (loader_ext2_read_indirect(fs, inode->i_blocks[i], 0, &help) < 0)
                 return -1;
@@ -263,8 +263,8 @@ ssize_t loader_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode,
         goto indirect;
     }
 
-    fileblock -= EXT2_N_DIRECT_BLK_PTR;
-    offset -= EXT2_N_DIRECT_BLK_PTR * blksz;
+    fileblock -= EXT2_NR_DIRECT_BLK_PTR;
+    offset -= EXT2_NR_DIRECT_BLK_PTR * blksz;
     if (fileblock < quater) {
         help.index[1] = offset >> bbits;
         help.index[0] = offset & bmask;
@@ -296,9 +296,9 @@ ssize_t loader_ext2_pread(struct ext2_fsinfo *fs, struct ext2_inode *inode,
     }
 
 indirect:
-    for (; i < EXT2_N_BLK_PTRS; i++) {
+    for (; i < EXT2_NR_BLK_PTRS; i++) {
         loader_ext2_read_indirect(fs, inode->i_blocks[i],
-                i - EXT2_N_DIRECT_BLK_PTR + 1, &help);
+                i - EXT2_NR_DIRECT_BLK_PTR + 1, &help);
         if (help.count >= total)
             return total;
     }

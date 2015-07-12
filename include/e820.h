@@ -21,7 +21,7 @@ struct mem_e820_entry {
 
 #define MEM_E820_MAX 128
 struct mem_e820_map {
-    u32 n_regions;
+    u32 nr_regions;
     struct mem_e820_entry regions[MEM_E820_MAX];
 };
 

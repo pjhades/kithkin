@@ -118,14 +118,14 @@ static int detect_memory(void)
         ".e820_last:\n\t"
             "xorl %%eax, %%eax\n\t"
         ".e820_done:\n\t"
-            :"=S"(e820map.n_regions), "=a"(error)
-            :"S"(e820map.n_regions), "D"(e820map.regions), "m"(size)
+            :"=S"(e820map.nr_regions), "=a"(error)
+            :"S"(e820map.nr_regions), "D"(e820map.regions), "m"(size)
             :
             );
     return error ? -1 : 0;
 }
 
-u64 boot_gdt[N_BOOT_GDT_ENTRY] = {
+u64 boot_gdt[NR_BOOT_GDT_ENTRY] = {
     /* 0: null descriptor */
     [0] = seg_desc(0x0, 0x0, 0x0),
     /* 1: 32-bit read/executable code segment, 4k granularity, DPL 0 */

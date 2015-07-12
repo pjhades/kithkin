@@ -114,9 +114,9 @@ int ata_identify_device(struct ata_device *dev)
     if (!(info16[49] & (1 << 9)))
         return -1;
     dev->size = (u64)info32[30];
-    dev->n_cylinder = info16[1];
-    dev->n_head = info16[3];
-    dev->n_sector_pertrack = info16[6];
+    dev->nr_cylinder = info16[1];
+    dev->nr_head = info16[3];
+    dev->nr_sector_pertrack = info16[6];
 
     return 0;
 }
@@ -124,7 +124,7 @@ int ata_identify_device(struct ata_device *dev)
 /* Only support LBA28 now so that
  * lba_hi should * always be 0.
  */
-int ata_read(struct ata_device *dev, u64 lba, u8 n_sector,
+int ata_read(struct ata_device *dev, u64 lba, u8 nr_sector,
         u8 *data)
 {
     u8 lba_bytes[6] = {0};
@@ -137,13 +137,13 @@ int ata_read(struct ata_device *dev, u64 lba, u8 n_sector,
     while (inb(ata_port_stat(dev->channel)) & ATA_STAT_BSY)
         ;
     outb(ata_port_drvsel(dev->channel), 0xe0 | ((lba >> 24) & 0x0f));
-    outb(ata_port_seccount(dev->channel), n_sector);
+    outb(ata_port_seccount(dev->channel), nr_sector);
     outb(ata_port_lba0(dev->channel), lba_bytes[0]);
     outb(ata_port_lba1(dev->channel), lba_bytes[1]);
     outb(ata_port_lba2(dev->channel), lba_bytes[2]);
     outb(ata_port_cmd(dev->channel), ATA_CMD_PIO_READ);
 
-    for (i = 0; i < n_sector; i++) {
+    for (i = 0; i < nr_sector; i++) {
         if ((status = ata_poll(dev)))
             return status;
         insl(ata_port_data(dev->channel), data, 128);
@@ -152,7 +152,7 @@ int ata_read(struct ata_device *dev, u64 lba, u8 n_sector,
     return 0;
 }
 
-int ata_write(struct ata_device *dev, u64 lba, u8 n_sector,
+int ata_write(struct ata_device *dev, u64 lba, u8 nr_sector,
         u8 *data)
 {
     u8 lba_bytes[6] = {0};
@@ -165,13 +165,13 @@ int ata_write(struct ata_device *dev, u64 lba, u8 n_sector,
     while (inb(ata_port_stat(dev->channel)) & ATA_STAT_BSY)
         ;
     outb(ata_port_drvsel(dev->channel), 0xe0 | ((lba >> 24) & 0x0f));
-    outb(ata_port_seccount(dev->channel), n_sector);
+    outb(ata_port_seccount(dev->channel), nr_sector);
     outb(ata_port_lba0(dev->channel), lba_bytes[0]);
     outb(ata_port_lba1(dev->channel), lba_bytes[1]);
     outb(ata_port_lba2(dev->channel), lba_bytes[2]);
     outb(ata_port_cmd(dev->channel), ATA_CMD_PIO_READ);
 
-    for (i = 0; i < n_sector; i++) {
+    for (i = 0; i < nr_sector; i++) {
         if ((status = ata_poll(dev)))
             return status;
         outsl(ata_port_data(dev->channel), data, 128);
