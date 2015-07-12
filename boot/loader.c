@@ -5,7 +5,7 @@
 #include <kernel/types.h>
 #include <kernel/kernel.h>
 #include <kernel/ext2.h>
-#include <kernel/bootdata.h>
+#include <kernel/saved_data.h>
 #include <kernel/mm.h>
 
 #define BUFSZ 1024
@@ -51,8 +51,8 @@ static void *load_kernel(void)
         if (phdr.p_type != PT_LOAD)
             continue;
 
-        if (phdr.p_vaddr >= KERNEL_VIRT_START)
-            phyaddr = phdr.p_vaddr - KERNEL_VIRT_START;
+        if (phdr.p_vaddr >= KERNEL_BASE_VA)
+            phyaddr = phdr.p_vaddr - KERNEL_BASE_VA;
         else
             phyaddr = phdr.p_vaddr;
 
@@ -75,7 +75,7 @@ static void *load_kernel(void)
 
 static void copy_kernel_data(void)
 {
-    char *dst = (char *)KERNEL_BOOTDATA;
+    char *dst = (char *)KERNEL_SAVED_DATA;
 #define COPY(ptr, var, tag) \
     do { \
         *((unsigned char *)(ptr)) = tag; \
@@ -86,11 +86,11 @@ static void copy_kernel_data(void)
         (ptr) += sizeof((var)); \
     } while (0)
 
-    COPY(dst, boot_gdt,    BOOTDATA_BOOTGDT);
-    COPY(dst, boot_gdtptr, BOOTDATA_BOOTGDTPTR);
-    COPY(dst, e820map,     BOOTDATA_E820);
+    COPY(dst, boot_gdt,    SAVED_DATA_BOOTGDT);
+    COPY(dst, boot_gdtptr, SAVED_DATA_BOOTGDTPTR);
+    COPY(dst, e820map,     SAVED_DATA_E820);
 #undef COPY
-    *((unsigned char *)dst) = BOOTDATA_NONE;
+    *((unsigned char *)dst) = SAVED_DATA_NONE;
 }
 
 struct console_device console;

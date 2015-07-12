@@ -2,7 +2,7 @@
 #include <e820.h>
 #include <kernel/types.h>
 #include <kernel/kernel.h>
-#include <kernel/bootdata.h>
+#include <kernel/saved_data.h>
 #include <kernel/mm.h>
 #include <kernel/bootmem.h>
 #include <kernel/buddy.h>
@@ -18,25 +18,25 @@ struct page *mem_map;
 
 static void get_kernel_data(void)
 {
-    char *dst = (char *)KERNEL_BOOTDATA;
+    char *dst = (char *)KERNEL_SAVED_DATA;
     unsigned char type;
     u32 size;
 
     type = *((unsigned char *)dst);
-    while (type != BOOTDATA_NONE) {
+    while (type != SAVED_DATA_NONE) {
         dst += sizeof(unsigned char);
         size = *((u32 *)dst);
         dst += sizeof(u32);
 
-        if (type == BOOTDATA_BOOTGDT) {
+        if (type == SAVED_DATA_BOOTGDT) {
             memcpy(boot_gdt, dst, size);
             dst += sizeof(u64) * N_BOOT_GDT_ENTRY;
         }
-        else if (type == BOOTDATA_BOOTGDTPTR) {
+        else if (type == SAVED_DATA_BOOTGDTPTR) {
             memcpy(&gdtptr, dst, size);
             dst += sizeof(struct gdtptr);
         }
-        else if (type == BOOTDATA_E820) {
+        else if (type == SAVED_DATA_E820) {
             memcpy(&e820map, dst, size);
             dst += sizeof(struct mem_e820_map);
         }
@@ -66,7 +66,7 @@ static void scan_e820map(void)
 
         /* here we only use the largest available region */
         if (e820map.regions[i].len < maxsize
-                || e820map.regions[i].base < MIN_PHYS)
+                || e820map.regions[i].base < MIN_PA)
             continue;
 
         minpfn = e820map.regions[i].base;
@@ -75,7 +75,7 @@ static void scan_e820map(void)
     }
 
     if (maxsize == 0)
-        die("e820: no minimal usable memory above %x\n", MIN_PHYS);
+        die("e820: no minimal usable memory above %x\n", MIN_PA);
 
     minpfn = pfn_up(minpfn);
     maxpfn = pfn_down(maxpfn);
@@ -104,11 +104,11 @@ static void init_mapping(void)
     u32 pde_start, pde_end, pte_start, pte_end;
     int pde_idx, pte_idx, count;
 
-    pte_start = phys_to_pfn(phys(KERNEL_VIRT_START));
-    pte_end = min(maxpfn, phys_to_pfn(DIRECTMAP_PHYS_MAX));
+    pte_start = phys_to_pfn(phys(KERNEL_BASE_VA));
+    pte_end = min(maxpfn, phys_to_pfn(DIRECT_MAP_MAX_PA));
 
-    pde_start = KERNEL_VIRT_START >> PAGEDIR_SHIFT;
-    pde_end = virt(min(pfn_to_phys(maxpfn), DIRECTMAP_PHYS_MAX))
+    pde_start = KERNEL_BASE_VA >> PAGEDIR_SHIFT;
+    pde_end = virt(min(pfn_to_phys(maxpfn), DIRECT_MAP_MAX_PA))
               >> PAGEDIR_SHIFT;
 
     pte_idx = pte_start;

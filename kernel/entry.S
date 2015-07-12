@@ -2,7 +2,7 @@
 #include <paging.h>
 #include <kernel/mm.h>
 
-#define pa(addr) addr - KERNEL_VIRT_START
+#define pa(addr) addr - KERNEL_BASE_VA
 
 .code32
 

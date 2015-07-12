@@ -1,9 +1,9 @@
 #ifndef __MM_H__
 #define __MM_H__
 
-#define KERNEL_VIRT_START 0xc0000000
+#define KERNEL_BASE_VA 0xc0000000
 
-#define N_USER_PDE    (KERNEL_VIRT_START >> PAGEDIR_SHIFT)
+#define N_USER_PDE    (KERNEL_BASE_VA >> PAGEDIR_SHIFT)
 #define N_KERNEL_PDE  (N_PDE - N_USER_PDE)
 
 #ifndef __ASSEMBLER__
@@ -13,10 +13,10 @@
 #include <kernel/types.h>
 
 /* we do not touch physical memory lower than this */
-#define MIN_PHYS 0x100000
+#define MIN_PA 0x100000
 
 /* directly map the first 896MB to kernel virtual space */
-#define DIRECTMAP_PHYS_MAX 0x38000000
+#define DIRECT_MAP_MAX_PA 0x38000000
 
 #define set_pde(addr, pde) *((pde_t *)addr) = (pde_t)(pde)
 #define set_pte(addr, pte) *((pte_t *)addr) = (pte_t)(pte)
@@ -27,8 +27,8 @@
 #define pfn_up(pa) (((u32)(pa) + PAGE_SIZE - 1) >> PAGE_SHIFT)
 #define pfn_down(pa) ((u32)(pa) >> PAGE_SHIFT)
 
-#define phys(addr) ((u32)(addr) - KERNEL_VIRT_START)
-#define virt(addr) ((u32)(addr) + KERNEL_VIRT_START)
+#define phys(addr) ((u32)(addr) - KERNEL_BASE_VA)
+#define virt(addr) ((u32)(addr) + KERNEL_BASE_VA)
 
 #define page_to_idx(page) ((page) - mem_map)
 #define idx_to_page(idx) ((idx) + mem_map)
