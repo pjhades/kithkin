@@ -13,6 +13,9 @@
      })
 #endif
 
+#define list_entry(ptr, type, field) \
+    container_of(ptr, type, field)
+
 struct list_node {
     struct list_node *next;
     struct list_node *prev;
@@ -26,28 +29,28 @@ struct list_node {
         (head)->next = (head); \
     } while (0)
 
-#define list_isempty(head) ((head)->next == (head))
+#define list_is_empty(head) ((head)->next == (head))
 
-#define list_foreach(var, head, field)                                 \
-    for ((var) = container_of((head)->next, typeof(*var), field);      \
-         &(var)->field != (head);                                      \
-         (var) = container_of((var)->field.next, typeof(*var), field))
+#define list_foreach(var, head, field)                               \
+    for ((var) = list_entry((head)->next, typeof(*var), field);      \
+         &(var)->field != (head);                                    \
+         (var) = list_entry((var)->field.next, typeof(*var), field))
 
-#define list_foreach_safe(var, tvar, head, field)                                \
-    for ((var) = container_of((head)->next, typeof(*var), field);                \
-         &(var)->field != (head) &&                                              \
-             ((tvar) = container_of((var)->field.next, typeof(*var), field), 1); \
+#define list_foreach_safe(var, tvar, head, field)                              \
+    for ((var) = list_entry((head)->next, typeof(*var), field);                \
+         &(var)->field != (head) &&                                            \
+             ((tvar) = list_entry((var)->field.next, typeof(*var), field), 1); \
          (var) = (tvar))
 
-#define list_foreach_back(var, head, field)                            \
-    for ((var) = container_of((head)->prev, typeof(*var), field);      \
-         &(var)->field != (head);                                      \
-         (var) = container_of((var)->field.prev, typeof(*var), field))
+#define list_foreach_back(var, head, field)                          \
+    for ((var) = list_entry((head)->prev, typeof(*var), field);      \
+         &(var)->field != (head);                                    \
+         (var) = list_entry((var)->field.prev, typeof(*var), field))
 
-#define list_foreach_back_safe(var, tvar, head, field)                           \
-    for ((var) = container_of((head)->prev, typeof(*var), field);                \
-         &(var)->field != (head) &&                                              \
-             ((tvar) = container_of((var)->field.prev, typeof(*var), field), 1); \
+#define list_foreach_back_safe(var, tvar, head, field)                         \
+    for ((var) = list_entry((head)->prev, typeof(*var), field);                \
+         &(var)->field != (head) &&                                            \
+             ((tvar) = list_entry((var)->field.prev, typeof(*var), field), 1); \
          (var) = (tvar))
 
 #define list_insert_before(node, listnode) \
@@ -85,6 +88,16 @@ struct list_node {
     do {                                   \
         (head)->prev->prev->next = (head); \
         (head)->prev = (head)->prev->prev; \
+    } while (0)
+
+#define list_get_head(var, head, field)                      \
+    do {                                                     \
+        var = list_entry((head)->next, typeof(*var), field); \
+    } while (0)
+
+#define list_get_tail(var, head, field)                      \
+    do {                                                     \
+        var = list_entry((head)->prev, typeof(*var), field); \
     } while (0)
 
 #endif

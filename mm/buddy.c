@@ -59,3 +59,47 @@ void free_pages(struct page *victim, int order)
     list_insert_head(&page->lru, &buddydata.free_areas[order].pages);
     buddydata.free_areas[order].size++;
 }
+
+/*
+ * Split page group of `order` into pieces so that we can only
+ * use the first page group of `req_order`. Return the rest of
+ * pages to the buddy system.
+ */
+static void split(struct page *page, int order, int req_order)
+{
+    struct page *half;
+
+    while (order > req_order) {
+        half = page + (1 << (order - 1));
+        free_pages(half, order - 1);
+        order--;
+    }
+}
+
+/* TODO rough version, may need further fining work
+ * flags, invoke oom, etc.
+ */
+struct page *alloc_pages(int order)
+{
+    struct page *page = NULL;
+    int req_order = order;
+
+    while (order <= MAX_ORDER) {
+        if (buddydata.free_areas[order].size > 0) {
+            list_get_head(page, &buddydata.free_areas[order].pages, lru);
+            list_remove(&page->lru);
+            buddydata.free_areas[order].size--;
+
+            set_page_order(page, 0);
+            page->flags &= ~(1 << PG_BUDDY);
+
+            split(page, order, req_order);
+
+            return page;
+        }
+
+        order++;
+    }
+
+    return page;
+}

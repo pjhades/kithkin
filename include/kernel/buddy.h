@@ -17,6 +17,7 @@ struct buddy_data {
 };
 
 void init_buddy(void);
+struct page *alloc_pages(int order);
 void free_pages(struct page *ptr, int order);
 
 #endif
