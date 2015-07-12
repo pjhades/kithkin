@@ -1,5 +1,5 @@
-#ifndef __BOOT_H__
-#define __BOOT_H__
+#ifndef __PM_H__
+#define __PM_H__
 
 #define BOOT_GDT_ENTRY_CODE 1
 #define BOOT_GDT_ENTRY_DATA 2

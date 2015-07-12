@@ -7,7 +7,7 @@
 #include <kernel/bootmem.h>
 #include <kernel/buddy.h>
 
-struct gdt_ptr gdtptr;
+struct gdtptr gdtptr;
 struct mem_e820_map e820map;
 u64 boot_gdt[N_BOOT_GDT_ENTRY];
 
@@ -34,7 +34,7 @@ static void get_kernel_data(void)
         }
         else if (type == BOOTDATA_BOOTGDTPTR) {
             memcpy(&gdtptr, dst, size);
-            dst += sizeof(struct gdt_ptr);
+            dst += sizeof(struct gdtptr);
         }
         else if (type == BOOTDATA_E820) {
             memcpy(&e820map, dst, size);

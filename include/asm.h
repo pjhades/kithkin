@@ -1,9 +1,7 @@
-#ifndef __X86_H__
-#define __X86_H__
+#ifndef __ASM_H__
+#define __ASM_H__
 
 #include <kernel/types.h>
-
-#define CR0_PG 0x80000000
 
 u8 inb(u16 port);
 void outb(u16 port, u8 value);

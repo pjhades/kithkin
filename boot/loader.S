@@ -1,5 +1,5 @@
-#include <mmu.h>
-#include <boot.h>
+#include <cpu.h>
+#include <pm.h>
 
 .globl _start
 

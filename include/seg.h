@@ -1,7 +1,6 @@
-#ifndef __MMU_H__
-#define __MMU_H__
+#ifndef __SEG_H__
+#define __SEG_H__
 
-#ifndef __ASSEMBLER__
 #include <kernel/types.h>
 
 #define seg_desc(base, limit, flags)   \
@@ -11,14 +10,9 @@
      ((((u64)base )&0x00ffffff)<<16) | \
       (((u64)limit)&0x0000ffff))
 
-struct gdt_ptr {
+struct gdtptr {
     u16 len;
     u32 ptr;
 } __attribute__((packed));
-
-#endif /* ASSEMBLER */
-
-#define CR0_PM  0x1
-#define CR0_PG  0x80000000
 
 #endif

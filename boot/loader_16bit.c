@@ -1,8 +1,8 @@
 #include <string.h>
-#include <x86.h>
+#include <asm.h>
 #include <e820.h>
-#include <mmu.h>
-#include <boot.h>
+#include <seg.h>
+#include <pm.h>
 #include <kernel/types.h>
 
 asm (".code16gcc\n");
@@ -134,7 +134,7 @@ u64 boot_gdt[N_BOOT_GDT_ENTRY] = {
     [BOOT_GDT_ENTRY_DATA] = seg_desc(0x0, 0xfffff, 0xc092),
 };
 
-struct gdt_ptr boot_gdtptr = {
+struct gdtptr boot_gdtptr = {
     .len = sizeof(boot_gdt) - 1,
     .ptr = (u32)&boot_gdt
 };
