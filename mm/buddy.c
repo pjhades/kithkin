@@ -30,7 +30,7 @@ void free_pages(struct page *victim, int order)
     int start_idx, buddy_idx, combined_idx;
 
     page = victim;
-    while (order <= MAX_ORDER) {
+    while (order < MAX_ORDER) {
         start_idx = page_to_idx(page) & ~((1 << order) - 1);
         buddy_idx = get_buddy_idx(start_idx, order);
 
