@@ -1,3 +1,4 @@
+#include <bitops.h>
 #include <kernel/buddy.h>
 
 struct buddy_data buddydata;
@@ -39,14 +40,14 @@ void free_pages(struct page *victim, int order)
 
         buddy = idx_to_page(buddy_idx);
 
-        if (!(buddy->flags & (1 << PG_BUDDY)) || page_order(buddy) != order)
+        if (!test_bit(buddy->flags, PG_BUDDY) || page_order(buddy) != order)
             break;
 
         list_remove(&buddy->lru);
         buddydata.free_areas[order].size--;
 
         set_page_order(buddy, 0);
-        buddy->flags &= ~(1 << PG_BUDDY);
+        clear_bit(buddy->flags, PG_BUDDY);
 
         combined_idx = start_idx & buddy_idx;
         page = idx_to_page(combined_idx);
@@ -55,7 +56,7 @@ void free_pages(struct page *victim, int order)
     }
 
     set_page_order(page, order);
-    page->flags |= (1 << PG_BUDDY);
+    set_bit(page->flags, PG_BUDDY);
     list_insert_head(&page->lru, &buddydata.free_areas[order].pages);
     buddydata.free_areas[order].size++;
 }
@@ -91,7 +92,7 @@ struct page *alloc_pages(int order)
             buddydata.free_areas[order].size--;
 
             set_page_order(page, 0);
-            page->flags &= ~(1 << PG_BUDDY);
+            clear_bit(page->flags, PG_BUDDY);
 
             split(page, order, req_order);
 
