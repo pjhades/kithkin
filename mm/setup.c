@@ -1,11 +1,12 @@
 #include <string.h>
 #include <e820.h>
+#include <kernel/mm.h>
 #include <kernel/types.h>
 #include <kernel/kernel.h>
 #include <kernel/saved_data.h>
-#include <kernel/mm.h>
 #include <kernel/bootmem.h>
 #include <kernel/buddy.h>
+#include <kernel/slab.h>
 
 struct gdtptr gdtptr;
 struct mem_e820_map e820map;
@@ -156,4 +157,6 @@ void meminit(void)
 
     page = alloc_pages(0);
     printk("page=%p, flags=%d, order=%d\n", page, page->flags, page_order(page));
+
+    init_slab();
 }

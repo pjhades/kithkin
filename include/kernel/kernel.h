@@ -19,7 +19,6 @@ int printk(const char *fmt, ...);
     } while (0)
 
 
-
 #define p2roundmask(x, y) ((typeof((x)))((y) - 1))
 #define p2roundup(x, y)   ((((x) - 1) | p2roundmask(x, y)) + 1)
 #define p2rounddown(x, y) ((x) & ~p2roundmask(x, y))

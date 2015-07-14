@@ -1,4 +1,4 @@
-SRCS = printk.c string.c 
+SRCS = printk.c string.c bitops.c
 OBJS := $(patsubst %.c, %.o, $(SRCS))
 
 lib.o: $(SRCS)

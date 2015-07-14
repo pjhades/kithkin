@@ -15,9 +15,9 @@ typedef unsigned long long u64;
 typedef long long          i64;
 #endif
 
-typedef u64 size_t;
-typedef i64 ssize_t;
-typedef i64 off_t;
+typedef u32 size_t;
+typedef i32 ssize_t;
+typedef i32 off_t;
 
 #define NULL ((void *)0)
 
