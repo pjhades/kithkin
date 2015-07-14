@@ -1,0 +1,14 @@
+#ifndef __SLAB_SIZES_H__
+#define __SLAB_SIZES_H__
+
+CACHE(4)
+CACHE(8)
+CACHE(16)
+CACHE(32)
+CACHE(64)
+CACHE(128)
+CACHE(256)
+CACHE(512)
+CACHE(0)
+
+#endif
