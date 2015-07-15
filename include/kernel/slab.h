@@ -19,16 +19,22 @@ struct slab {
     void *objs;
     u32 free;
     u32 nr_inuse;
-    struct list_node list;
+    struct slab_cache *cache;
+    struct list_node next;
 };
+
+#define SLAB_FREEARRAY_END -1
+#define slab_freearray(slab) ((char *)(slab) + sizeof(struct slab))
 
 struct cache_sizes {
     char *name;
     size_t size;
+    struct slab_cache *cache;
 };
 
 // TODO not implemented
 struct slab_cache *slab_cache_create(const char *name, size_t size,
         size_t align, u32 flags);
 void init_slab(void);
+void *kmalloc(size_t size);
 #endif
