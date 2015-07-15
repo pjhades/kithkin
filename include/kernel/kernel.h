@@ -3,6 +3,8 @@
 
 #include <stdarg.h>
 
+#define WORD_SIZE 4
+
 int sprintk(char *str, const char *fmt, va_list va);
 int printk(const char *fmt, ...);
 
@@ -25,5 +27,8 @@ int printk(const char *fmt, ...);
 
 #define max(x, y) ((x) > (y) ? (x) : (y))
 #define min(x, y) ((x) < (y) ? (x) : (y))
+
+#define align_mask(v, m)  (((v) + (m)) & ~(m))
+#define align(v, a) align_mask((v), (typeof(v))(a) - 1)
 
 #endif

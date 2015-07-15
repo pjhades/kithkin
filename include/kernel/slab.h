@@ -5,12 +5,11 @@
 #include <kernel/types.h>
 
 struct slab_cache {
-    const char *name;
+    char *name;
     struct list_node next;
     size_t objsize;
-    size_t objnum;
     size_t realsize;
-    u32 order;
+    u32 objnum;
     struct list_node list_free;
     struct list_node list_partial;
     struct list_node list_full;
@@ -24,7 +23,7 @@ struct slab {
 };
 
 struct cache_sizes {
-    const char *name;
+    char *name;
     size_t size;
 };
 

@@ -8,5 +8,6 @@
 #define clear_bit(v, b) (v) &= ~(1 << (b))
 
 u32 next_pow2_32bit(u32 x);
+u32 log2(u32 x);
 
 #endif

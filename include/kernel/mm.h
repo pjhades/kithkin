@@ -36,6 +36,8 @@
 #define pfn_to_page(pfn) idx_to_page((pfn) - minpfn)
 #define page_to_pfn(page) (page_to_idx((page)) + minpfn)
 
+#define direct_map_page_to_virt(page) virt(pfn_to_phys(page_to_pfn(page)))
+
 typedef u32 pde_t;
 typedef u32 pte_t;
 

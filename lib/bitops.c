@@ -11,3 +11,12 @@ u32 next_pow2_32bit(u32 x)
     x++;
     return x;
 }
+
+u32 log2(u32 x)
+{
+    u32 r = 0;
+
+    while (x >>= 1)
+        r++;
+    return r;
+}
