@@ -10,25 +10,14 @@ struct cache_sizes kmalloc_sizes[] = {
 #undef CACHE
 };
 
+#define size_idx(size) (log2(size) - 2)
+
 struct list_node slab_caches;
 
 /* cache1: for allocating struct slab_cache
  * cache2: for allocating struct slab
  */
 struct slab_cache cache1, cache2;
-
-//static void init_other_slabs(void)
-//{
-//    struct slab_cache *cachep;
-//    struct cache_sizes *sizep;
-//
-//    for (sizep = kmalloc_sizes; sizep->size > 0; sizep++) {
-//        if (sizep->size == first_cache.objsize)
-//            continue;
-//
-//        cachep = kmalloc();
-//    }
-//}
 
 static int check_slab_size(u32 nr_obj, size_t objsize)
 {
@@ -68,45 +57,82 @@ static void cache_grow(struct slab_cache *cache)
     list_insert_head(&slab->next, &cache->list_free);
 }
 
-#define size_idx(size) (log2(size) - 2)
-
-/* Manually initialize the caches for slab_cache and slab
- * descriptors in order to make kmalloc available for the
- * initialization of other sizes.
+/* Create a new slab cache. If `cache` is NULL, allocate
+ * a new one with kmalloc, otherwise we just fill the members
+ * of `cache`.
+ *
+ * Return the created cache.
  */
-static void init_ancestor_cache(struct slab_cache *cache, size_t realsize)
+static struct slab_cache *add_cache(struct slab_cache *cache, char *name,
+        size_t realsize)
 {
-    size_t objsize;
+    struct slab_cache *c;
+    size_t objsize = next_pow2_32bit(realsize);
 
-    objsize = next_pow2_32bit(realsize);
+    if (!cache) {
+        cache = kmalloc(sizeof(struct slab_cache));
+        if (!cache)
+            die("cannot create kmalloc caches\n");
+    }
 
-    cache->name = kmalloc_sizes[size_idx(objsize)].name;
-    cache->realsize = realsize;
+    cache->name = name;
     cache->objsize = objsize;
+    cache->realsize = realsize;
 
     list_init(&cache->list_free);
     list_init(&cache->list_partial);
     list_init(&cache->list_full);
 
-    list_insert_tail(&cache->next, &slab_caches);
+    list_foreach(c, &slab_caches, next)
+        if (c->objsize > cache->objsize)
+            break;
+    list_insert_before(&cache->next, &c->next);
 
-    kmalloc_sizes[size_idx(objsize)].cache = cache;
+    printk("create cache %s, objsize=%d, realsize=%d\n",
+            cache->name, cache->objsize, cache->realsize);
+
+    return cache;
 }
 
-void init_slab(void)
+static void add_kmalloc_caches(void)
 {
-    list_init(&slab_caches);
+    struct cache_sizes *sizep;
+    struct slab_cache *cache;
 
-    init_ancestor_cache(&cache1, sizeof(struct slab_cache));
-    init_ancestor_cache(&cache2, sizeof(struct slab));
+    for (sizep = kmalloc_sizes; sizep->size > 0; sizep++) {
+        if (sizep->cache)
+            continue;
 
-    //init_other_slabs(void);
+        cache = add_cache(NULL, sizep->name, sizep->size);
+        kmalloc_sizes[size_idx(cache->objsize)].cache = cache;
+    }
 }
 
 static int cache_is_empty(struct slab_cache *cache)
 {
     return list_is_empty(&cache->list_free)
         && list_is_empty(&cache->list_partial);
+}
+
+void init_slab(void)
+{
+    size_t objsize;
+
+    list_init(&slab_caches);
+
+    /* Initialize the caches for slab_cache and slab
+     * descriptors in order to make kmalloc available for the
+     * initialization of other sizes.
+     */
+    objsize = next_pow2_32bit(sizeof(struct slab_cache));
+    add_cache(&cache1, kmalloc_sizes[size_idx(objsize)].name, objsize);
+    kmalloc_sizes[size_idx(cache1.objsize)].cache = &cache1;
+
+    objsize = next_pow2_32bit(sizeof(struct slab));
+    add_cache(&cache2, kmalloc_sizes[size_idx(objsize)].name, objsize);
+    kmalloc_sizes[size_idx(cache2.objsize)].cache = &cache2;
+
+    add_kmalloc_caches();
 }
 
 void *kmalloc(size_t size)
@@ -177,4 +203,10 @@ void kfree(void *obj)
         list_remove(&slab->next);
         list_insert_head(&slab->next, &slab->cache->list_partial);
     }
+}
+
+struct slab_cache *slab_cache_create(char *name, size_t size, size_t align,
+        u32 flags)
+{
+    return add_cache(NULL, name, size);
 }
