@@ -32,7 +32,6 @@ struct cache_sizes {
     struct slab_cache *cache;
 };
 
-// TODO not implemented
 struct slab_cache *slab_cache_create(char *name, size_t size, size_t align,
         u32 flags);
 void init_slab(void);
