@@ -113,7 +113,7 @@ void *kmalloc(size_t size)
     struct page *page;
     struct slab *slab;
     struct slab_cache *cache;
-    int nr_pages, grown = 0;
+    int nr_pages;
     size_t p2size;
     void *obj;
 
@@ -134,15 +134,13 @@ void *kmalloc(size_t size)
     if (!cache)
         die("kmalloc is not properly initialized\n");
 
-    if (cache_is_empty(cache)) {
+    if (cache_is_empty(cache))
         cache_grow(cache);
-        grown = 1;
-    }
 
-    if (grown)
-        list_get_head(slab, &cache->list_free, next);
-    else
+    if (!list_is_empty(&cache->list_partial))
         list_get_head(slab, &cache->list_partial, next);
+    else
+        list_get_head(slab, &cache->list_free, next);
 
     obj = (char *)slab->objs + slab->cache->objsize * slab->free;
     slab->free = slab_freearray(slab)[slab->free];
@@ -151,6 +149,9 @@ void *kmalloc(size_t size)
     if (slab->nr_inuse == slab->cache->objnum) {
         list_remove(&slab->next);
         list_insert_head(&slab->next, &slab->cache->list_full);
+    } else if (slab->nr_inuse == 1) {
+        list_remove(&slab->next);
+        list_insert_head(&slab->next, &slab->cache->list_partial);
     }
 
     return obj;
@@ -171,5 +172,8 @@ void kfree(void *obj)
     if (slab->nr_inuse == 0) {
         list_remove(&slab->next);
         list_insert_head(&slab->next, &slab->cache->list_free);
+    } else if (slab->nr_inuse == slab->cache->objnum - 1) {
+        list_remove(&slab->next);
+        list_insert_head(&slab->next, &slab->cache->list_partial);
     }
 }

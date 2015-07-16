@@ -152,11 +152,16 @@ void meminit(void)
     init_pages();
     init_buddy();
     free_all_bootmem();
-
-    struct page *page;
-
-    page = alloc_pages(0);
-    printk("page=%p, flags=%d, order=%d\n", page, page->flags, page_order(page));
-
     init_slab();
+
+    struct slab_cache *cache;
+    struct slab *slab;
+
+    cache = kmalloc(sizeof(*cache));
+    printk("cache=%p\n", cache);
+    kfree(cache);
+
+    slab = kmalloc(sizeof(*slab));
+    printk("slab=%p\n", slab);
+    kfree(slab);
 }
