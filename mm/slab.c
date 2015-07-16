@@ -30,39 +30,18 @@ struct slab_cache cache1, cache2;
 //    }
 //}
 
-static void cache_grow(struct slab_cache *cache)
-{
-}
-
 static int check_slab_size(u32 nr_obj, size_t objsize)
 {
     return align(sizeof(struct slab) + nr_obj * sizeof(u32), WORD_SIZE) +
         nr_obj * objsize < PAGE_SIZE;
 }
 
-#define size_idx(size) (log2(size) - 2)
-
-/* Manually initialize the caches for slab_cache and slab
- * descriptors in order to make kmalloc available for the
- * initialization of other sizes.
- */
-static void init_ancestor_cache(struct slab_cache *cache, size_t realsize)
+static void cache_grow(struct slab_cache *cache)
 {
-    size_t objsize;
     struct page *page;
     struct slab *slab;
     u32 nr_obj;
     int i;
-
-    objsize = next_pow2_32bit(realsize);
-
-    cache->name = kmalloc_sizes[size_idx(objsize)].name;
-    cache->realsize = realsize;
-    cache->objsize = objsize;
-
-    list_init(&cache->list_free);
-    list_init(&cache->list_partial);
-    list_init(&cache->list_full);
 
     page = alloc_pages(0);
     if (!page)
@@ -71,11 +50,11 @@ static void init_ancestor_cache(struct slab_cache *cache, size_t realsize)
     slab = (struct slab *)direct_map_page_to_virt(page);
     slab->cache = cache;
 
-    nr_obj = PAGE_SIZE / objsize;
-    while (!check_slab_size(nr_obj, objsize))
+    nr_obj = PAGE_SIZE / cache->objsize;
+    while (!check_slab_size(nr_obj, cache->objsize))
         nr_obj--;
-
     cache->objnum = nr_obj;
+
     slab->objs = (void *)align((u32)slab + sizeof(struct slab) +
             nr_obj * sizeof(u32), WORD_SIZE);
     slab->nr_inuse = 0;
@@ -87,6 +66,28 @@ static void init_ancestor_cache(struct slab_cache *cache, size_t realsize)
     slab_freearray(slab)[nr_obj - 1] = SLAB_FREEARRAY_END;
 
     list_insert_head(&slab->next, &cache->list_free);
+}
+
+#define size_idx(size) (log2(size) - 2)
+
+/* Manually initialize the caches for slab_cache and slab
+ * descriptors in order to make kmalloc available for the
+ * initialization of other sizes.
+ */
+static void init_ancestor_cache(struct slab_cache *cache, size_t realsize)
+{
+    size_t objsize;
+
+    objsize = next_pow2_32bit(realsize);
+
+    cache->name = kmalloc_sizes[size_idx(objsize)].name;
+    cache->realsize = realsize;
+    cache->objsize = objsize;
+
+    list_init(&cache->list_free);
+    list_init(&cache->list_partial);
+    list_init(&cache->list_full);
+
     list_insert_tail(&cache->next, &slab_caches);
 
     kmalloc_sizes[size_idx(objsize)].cache = cache;
