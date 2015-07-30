@@ -35,7 +35,7 @@
 
 #Test
 ##Test if mapping is set up correctly
-Read the first byte of each physical page and see if #GP triggers:
+Read the first byte of each physical page and see if error triggers:
 
 ```C
     char byte;
