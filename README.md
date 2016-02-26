@@ -1,3 +1,35 @@
+#Booting
+##Boot sector
+Boot sector is implemented in `setctor.S`, check partition to find the first bootable linux partition.
+Then call `int 0x13` to load the bootloader from `C:H:S = 0:0:2`. Finally
+jump to bootloader.
+
+##Bootloader
+Bootloader passes control to the kernel. We do this in a C-assembly-C manner.
+
+First run `main` from `loader_16bit.c`. In this file we
+* enable A20 line to access memory higher than 1M
+* call `int 0x15` to detect memory map
+* set up GDT
+  * one 32-bit read/executable code segment, 4K granularity, DPL 0
+  * one 32-bit read/write data segment, 4K granularity, DPL 0
+* call `enter_protected_mode`
+
+Then in `loader.S`, we
+* enter the protected mode
+* call `loader_main` to the loader code
+
+Finally in `loader.c`, we
+* clear the text-based console
+* initialize the IDE device
+* call `load_kernel`
+  * first we locate the ext2 file system start
+  * then we call `loader_ext2_find_file` to locate the image in the file system
+  * finally we read the ELF image and load the required segments into memory
+  * return the kernel image entry address
+* jump to the kernel image entry address
+
+
 #Physical Memory
 
             +----------------------+
