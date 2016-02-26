@@ -20,10 +20,16 @@ static void *load_kernel(void)
     struct elf32_ehdr elf;
     struct elf32_phdr phdr;
 
-    /* get LBA of first sector from partition table */
-    addr = (u8 *)0x7dbe; /* 0x7c00 + 446 */
+    /* first partition at 0x7c00 + 446 */
+
+    /* TODO
+     * maybe this can be improved, here we only try to load
+     * the ext2 fs from the first bootable linux partition
+     */
+    addr = (u8 *)0x7dbe;
     while (*addr != 0x80 || *(addr + 4) != 0x83)
         addr += 0x10;
+    /* get LBA of first sector from partition table */
     fs.disk_start = (*((u32 *)(addr + 8))) << 9;
 
     loader_ext2_get_fsinfo(&fs);
