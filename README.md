@@ -29,6 +29,12 @@ Finally in `loader.c`, we
   * return the kernel image entry address
 * jump to the kernel image entry address
 
+##Kernel entry
+This is linked to `.text.entry` section.
+
+The first thing is to set up the mappings for paging.
+
+
 
 #Physical Memory
 
@@ -67,7 +73,7 @@ Finally in `loader.c`, we
 
 #Test
 ##Test if mapping is set up correctly
-Read the first byte of each physical page and see if error triggers:
+Read the first byte of each physical page and see if #GP triggers:
 
 ```C
     char byte;
