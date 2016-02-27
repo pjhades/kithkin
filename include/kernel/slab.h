@@ -37,4 +37,7 @@ struct slab_cache *slab_cache_create(char *name, size_t size, size_t align,
 void init_slab(void);
 void *kmalloc(size_t size);
 void kfree(void *obj);
+/* TODO
+ * add slab cache allocate/free interfaces
+ */
 #endif

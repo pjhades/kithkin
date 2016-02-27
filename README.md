@@ -72,9 +72,17 @@ we access memory only through virtual addresses. The new page directory starts f
 We set up a new mapping, which directly map the lower 896 MB physical memory to the kernel virtual memory space,
 which is above `0xc0000000`.
 
-Then, `init_pages()`, allocate a `page` structure for each physical page in the system.
+Then, `init_pages()`, allocate a `page` structure for each physical page in the range of `minpfn` to `maxpfn`, saved in `mem_map`.
 
-Then, `init_buddy()`
+Then, `init_buddy()`, initializes buddy allocator. We maintain 10 orders of continuous pages, each has a
+linked list holding all the 2^order -sized page blocks on it.
+
+Then, `free_all_bootmem()`, bootmem allocator handles all the free pages to the buddy allocator.
+
+Then, `init_slab()`, initialize slab allocator. We maintain 4-512 KB -sized objects with the slab allocator.
+Since the creation of slabs needs `kmalloc()`, we need to bootstrap the slabs for `struct slab_cache` and `struct slab` to make `kmalloc()` available
+for the rest slab sizes. `kmalloc()` has an array called `kmalloc_sizes` which records the pointers to the slab of each size.
+All slab caches are stored in the linked list `slab_caches`.
 
 
 
@@ -105,7 +113,7 @@ Then, `init_buddy()`
             |                      |
             |                      |
             |                      |
-       +--- +----------------------+ min(maxpfn, phys_to_pfn(DIRECTMAP_PHYS_MAX))
+       +--- +----------------------+ end of direct mapping area, min of maxpfn and DIRECTMAP_PHYS_MAX
        |    |                      |
        |    |                      |
        |    |                      |

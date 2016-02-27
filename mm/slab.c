@@ -34,12 +34,26 @@ static void cache_grow(struct slab_cache *cache)
 
     page = alloc_pages(0);
     if (!page)
-        die("no enough memory to init ancestor caches\n");
+        die("no enough memory to grow cache\n");
 
+    /* TODO
+     * for the same fucking reason
+     */
+    if ((page_to_pfn(page) << PAGE_SHIFT) > DIRECT_MAP_MAX_PA) {
+        free_pages(page, log2(nr_pages));
+        die("cannot allocate page in low memory\n");
+    }
+
+    /* FIXME
+     * change this after highmem done
+     */
     slab = (struct slab *)direct_map_page_to_virt(page);
     slab->cache = cache;
 
     nr_obj = PAGE_SIZE / cache->objsize;
+    /* FIXME
+     * what if a valid nr_obj cannot be found ?
+     */
     while (!check_slab_size(nr_obj, cache->objsize))
         nr_obj--;
     cache->objnum = nr_obj;
@@ -152,6 +166,25 @@ void *kmalloc(size_t size)
         page = alloc_pages(log2(nr_pages));
         if (!page)
             return NULL;
+        /* TODO
+         * mem_map has a page struct for each page in minpfn ~ maxpfn
+         * but maxpfn may > 896 MB
+         * so the page returned here may lie beyond the direct mapping area
+         * therefore we cannot simple decide the virtual address like this
+         *
+         * maybe  void *page_address(struct page *p)
+         * to decide highmem address
+         */
+        /* FIXME
+         * currently we just write a fucking version
+         * we do not allow the allocated page to lie in highmem (> 896 MB)
+         * damn it.
+         */
+        if ((page_to_pfn(page) << PAGE_SHIFT) > DIRECT_MAP_MAX_PA) {
+            free_pages(page, log2(nr_pages));
+            return NULL;
+        }
+
         return (void *)direct_map_page_to_virt(page);
     }
 
